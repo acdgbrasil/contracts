@@ -1,0 +1,29 @@
+openapi: 3.2.0
+info:
+  title: Service C Sync Contract
+  version: 1.0.0
+  description: Synchronous APIs for service-c.
+servers:
+  - url: https://api.example.com/service-c
+paths:
+  /v1/resources:
+    post:
+      operationId: createServiceCResource
+      summary: Create resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceCResource'
+      responses:
+        '201':
+          description: Resource created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceCResource'
+components:
+  schemas:
+    ServiceCResource:
+      $ref: ../model/schemas/ServiceCResource.yaml

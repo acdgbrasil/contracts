@@ -1,0 +1,30 @@
+asyncapi: 3.0.0
+info:
+  title: Service A Async Contract
+  version: 1.0.0
+  description: Asynchronous events for service-a.
+defaultContentType: application/json
+servers:
+  production:
+    host: broker.example.com
+    protocol: kafka
+channels:
+  service-a.resource.created:
+    address: service-a.resource.created
+    messages:
+      ServiceAResourceCreated:
+        $ref: '#/components/messages/ServiceAResourceCreated'
+operations:
+  publishServiceAResourceCreated:
+    action: send
+    channel:
+      $ref: '#/channels/service-a.resource.created'
+    messages:
+      - $ref: '#/channels/service-a.resource.created/messages/ServiceAResourceCreated'
+components:
+  messages:
+    ServiceAResourceCreated:
+      name: ServiceAResourceCreated
+      title: Service A Resource Created
+      payload:
+        $ref: ../model/schemas/ServiceAResource.yaml

@@ -1,0 +1,30 @@
+asyncapi: 3.0.0
+info:
+  title: Service B Async Contract
+  version: 1.0.0
+  description: Asynchronous events for service-b.
+defaultContentType: application/json
+servers:
+  production:
+    host: broker.example.com
+    protocol: kafka
+channels:
+  service-b.resource.updated:
+    address: service-b.resource.updated
+    messages:
+      ServiceBResourceUpdated:
+        $ref: '#/components/messages/ServiceBResourceUpdated'
+operations:
+  publishServiceBResourceUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/service-b.resource.updated'
+    messages:
+      - $ref: '#/channels/service-b.resource.updated/messages/ServiceBResourceUpdated'
+components:
+  messages:
+    ServiceBResourceUpdated:
+      name: ServiceBResourceUpdated
+      title: Service B Resource Updated
+      payload:
+        $ref: ../model/schemas/ServiceBResource.yaml
