@@ -3,8 +3,11 @@ info:
   title: Social Care Sync Contract
   version: 1.0.0
   description: Synchronous APIs for social-care service.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
 servers:
-  - url: https://api.example.com/social-care
+  - url: https://api.acdgbrasil.com/social-care
 tags:
   - name: Patients
     description: Patient registration and profile operations.
