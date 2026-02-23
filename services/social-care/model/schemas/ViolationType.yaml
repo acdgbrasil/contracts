@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ViolationType
+type: string
+enum:
+  - NEGLECT
+  - PSYCHOLOGICAL_VIOLENCE
+  - PHYSICAL_VIOLENCE
+  - SEXUAL_ABUSE
+  - SEXUAL_EXPLOITATION
+  - CHILD_LABOR
+  - FINANCIAL_EXPLOITATION
+  - DISCRIMINATION
+  - OTHER

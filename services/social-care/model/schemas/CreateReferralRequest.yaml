@@ -1,0 +1,22 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CreateReferralRequest
+type: object
+additionalProperties: false
+required:
+  - referredPersonId
+  - destinationService
+  - reason
+properties:
+  referredPersonId:
+    $ref: ./UuidV7.yaml
+  destinationService:
+    $ref: ./ReferralDestinationService.yaml
+  reason:
+    type: string
+    minLength: 1
+    maxLength: 2000
+    pattern: ^.*\S.*$
+  date:
+    $ref: ./IsoDate.yaml
+  professionalId:
+    $ref: ./UuidV7.yaml

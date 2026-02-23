@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SewageDisposalMethod
+type: string
+enum:
+  - PUBLIC_SEWER
+  - SEPTIC_TANK
+  - RUDIMENTARY_PIT
+  - OPEN_SEWAGE
+  - NO_BATHROOM

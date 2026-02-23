@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SocialBenefit
+type: object
+additionalProperties: false
+required:
+  - benefitName
+  - amount
+  - beneficiaryId
+properties:
+  benefitName:
+    type: string
+    minLength: 1
+    maxLength: 200
+    pattern: ^.*\S.*$
+  amount:
+    type: number
+    exclusiveMinimum: 0
+  beneficiaryId:
+    $ref: ./UuidV7.yaml

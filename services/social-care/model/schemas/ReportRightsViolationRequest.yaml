@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ReportRightsViolationRequest
+type: object
+additionalProperties: false
+required:
+  - victimId
+  - violationType
+  - reportDate
+  - incidentDate
+  - descriptionOfFact
+properties:
+  victimId:
+    $ref: ./UuidV7.yaml
+  violationType:
+    $ref: ./ViolationType.yaml
+  reportDate:
+    $ref: ./IsoDate.yaml
+  incidentDate:
+    $ref: ./IsoDate.yaml
+  descriptionOfFact:
+    type: string
+    minLength: 1
+    maxLength: 5000
+    pattern: ^.*\S.*$
+  actionsTaken:
+    type: string
+    maxLength: 5000

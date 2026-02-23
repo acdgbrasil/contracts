@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SuccessResponseWithActionResult
+type: object
+additionalProperties: false
+required:
+  - success
+  - data
+properties:
+  success:
+    type: boolean
+    const: true
+  data:
+    $ref: ./ActionAcknowledgementData.yaml

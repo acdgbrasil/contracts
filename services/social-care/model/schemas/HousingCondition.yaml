@@ -1,0 +1,41 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: HousingCondition
+type: object
+additionalProperties: false
+required:
+  - housingConditionType
+  - wallMaterial
+  - numberOfRooms
+  - numberOfBathrooms
+  - waterSupplyType
+  - electricityAccess
+  - sewerDisposalMethod
+  - wasteCollectionType
+  - accessibilityLevel
+  - isInGeographicRiskArea
+  - isInSocialConflictArea
+properties:
+  housingConditionType:
+    $ref: ./HousingConditionType.yaml
+  wallMaterial:
+    $ref: ./WallMaterial.yaml
+  numberOfRooms:
+    type: integer
+    minimum: 0
+  numberOfBathrooms:
+    type: integer
+    minimum: 0
+  waterSupplyType:
+    $ref: ./WaterSupplyType.yaml
+  electricityAccess:
+    $ref: ./ElectricityAccess.yaml
+  sewerDisposalMethod:
+    $ref: ./SewageDisposalMethod.yaml
+  wasteCollectionType:
+    $ref: ./WasteCollectionType.yaml
+  accessibilityLevel:
+    $ref: ./AccessibilityLevel.yaml
+  isInGeographicRiskArea:
+    type: boolean
+  isInSocialConflictArea:
+    type: boolean

@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientCreatedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - personId
+    properties:
+      patientId:
+        $ref: ./UuidV7.yaml
+      personId:
+        $ref: ./UuidV7.yaml

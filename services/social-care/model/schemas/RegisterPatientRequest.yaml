@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegisterPatientRequest
+type: object
+additionalProperties: false
+required:
+  - personId
+  - initialDiagnoses
+properties:
+  personId:
+    $ref: ./UuidV7.yaml
+    description: Person unique identifier (UUID v7 expected by service).
+  initialDiagnoses:
+    type: array
+    minItems: 1
+    maxItems: 100
+    items:
+      $ref: ./InitialDiagnosis.yaml

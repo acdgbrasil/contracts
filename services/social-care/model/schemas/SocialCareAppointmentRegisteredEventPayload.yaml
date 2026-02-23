@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SocialCareAppointmentRegisteredEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - appointmentId
+      - professionalInChargeId
+      - type
+    properties:
+      patientId:
+        $ref: ./UuidV7.yaml
+      appointmentId:
+        $ref: ./UuidV7.yaml
+      professionalInChargeId:
+        $ref: ./UuidV7.yaml
+      type:
+        $ref: ./SocialCareAppointmentType.yaml

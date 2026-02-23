@@ -1,0 +1,30 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ReferralCreatedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - referralId
+      - referredPersonId
+      - destinationService
+      - status
+    properties:
+      patientId:
+        $ref: ./UuidV7.yaml
+      referralId:
+        $ref: ./UuidV7.yaml
+      referredPersonId:
+        $ref: ./UuidV7.yaml
+      destinationService:
+        $ref: ./ReferralDestinationService.yaml
+      status:
+        $ref: ./ReferralStatus.yaml

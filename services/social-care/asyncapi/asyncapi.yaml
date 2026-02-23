@@ -1,0 +1,113 @@
+asyncapi: 3.0.0
+info:
+  title: Social Care Async Contract
+  version: 1.0.0
+  description: Asynchronous event contracts for social-care service.
+defaultContentType: application/json
+servers:
+  production:
+    host: broker.example.com
+    protocol: kafka
+channels:
+  social-care.patient.created:
+    address: social-care.patient.created
+    messages:
+      PatientCreated:
+        $ref: '#/components/messages/PatientCreated'
+
+  social-care.family-member.added:
+    address: social-care.family-member.added
+    messages:
+      FamilyMemberAdded:
+        $ref: '#/components/messages/FamilyMemberAdded'
+
+  social-care.referral.created:
+    address: social-care.referral.created
+    messages:
+      ReferralCreated:
+        $ref: '#/components/messages/ReferralCreated'
+
+  social-care.rights-violation.reported:
+    address: social-care.rights-violation.reported
+    messages:
+      RightsViolationReported:
+        $ref: '#/components/messages/RightsViolationReported'
+
+  social-care.appointment.registered:
+    address: social-care.appointment.registered
+    messages:
+      SocialCareAppointmentRegistered:
+        $ref: '#/components/messages/SocialCareAppointmentRegistered'
+
+operations:
+  publishPatientCreated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.patient.created'
+    messages:
+      - $ref: '#/channels/social-care.patient.created/messages/PatientCreated'
+
+  publishFamilyMemberAdded:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.family-member.added'
+    messages:
+      - $ref: '#/channels/social-care.family-member.added/messages/FamilyMemberAdded'
+
+  publishReferralCreated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.referral.created'
+    messages:
+      - $ref: '#/channels/social-care.referral.created/messages/ReferralCreated'
+
+  publishRightsViolationReported:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.rights-violation.reported'
+    messages:
+      - $ref: '#/channels/social-care.rights-violation.reported/messages/RightsViolationReported'
+
+  publishSocialCareAppointmentRegistered:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.appointment.registered'
+    messages:
+      - $ref: '#/channels/social-care.appointment.registered/messages/SocialCareAppointmentRegistered'
+
+components:
+  messages:
+    PatientCreated:
+      name: PatientCreated
+      title: Patient Created
+      summary: Emitted when a new patient record is created.
+      payload:
+        $ref: ../model/schemas/PatientCreatedEventPayload.yaml
+
+    FamilyMemberAdded:
+      name: FamilyMemberAdded
+      title: Family Member Added
+      summary: Emitted when a family member is associated with a patient.
+      payload:
+        $ref: ../model/schemas/FamilyMemberAddedEventPayload.yaml
+
+    ReferralCreated:
+      name: ReferralCreated
+      title: Referral Created
+      summary: Emitted when a referral is created for a patient.
+      payload:
+        $ref: ../model/schemas/ReferralCreatedEventPayload.yaml
+
+    RightsViolationReported:
+      name: RightsViolationReported
+      title: Rights Violation Reported
+      summary: Emitted when a rights violation report is registered.
+      payload:
+        $ref: ../model/schemas/RightsViolationReportedEventPayload.yaml
+
+    SocialCareAppointmentRegistered:
+      name: SocialCareAppointmentRegistered
+      title: Social Care Appointment Registered
+      summary: Emitted when a social care appointment is registered.
+      payload:
+        $ref: ../model/schemas/SocialCareAppointmentRegisteredEventPayload.yaml

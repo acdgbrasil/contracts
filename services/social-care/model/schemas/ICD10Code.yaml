@@ -1,0 +1,6 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ICD10Code
+type: string
+pattern: ^[A-TV-Z][0-9][0-9AB](\.[0-9A-TV-Z]{1,4})?$
+example: F84.0
+description: ICD-10 diagnosis code.

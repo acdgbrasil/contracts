@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ReferralDestinationService
+type: string
+enum:
+  - CRAS
+  - CREAS
+  - HEALTH_CARE
+  - EDUCATION
+  - LEGAL
+  - OTHER

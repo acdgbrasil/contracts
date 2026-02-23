@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SuccessResponseWithPatientId
+type: object
+additionalProperties: false
+required:
+  - success
+  - data
+properties:
+  success:
+    type: boolean
+    const: true
+  data:
+    $ref: ./PatientCreatedData.yaml

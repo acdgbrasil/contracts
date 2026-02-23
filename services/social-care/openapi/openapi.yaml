@@ -1,0 +1,346 @@
+openapi: 3.1.0
+info:
+  title: Social Care Sync Contract
+  version: 1.0.0
+  description: Synchronous APIs for social-care service.
+servers:
+  - url: https://api.example.com/social-care
+tags:
+  - name: Patients
+    description: Patient registration and profile operations.
+  - name: Family
+    description: Family member management operations.
+  - name: Appointments
+    description: Social care appointment operations.
+  - name: Referrals
+    description: Referral operations.
+  - name: Compliance
+    description: Rights violation reporting.
+  - name: Socioeconomic
+    description: Housing and socioeconomic assessment operations.
+security:
+  - bearerAuth: []
+paths:
+  /patients:
+    post:
+      operationId: registerPatient
+      summary: Register patient
+      description: Creates a new social-care patient record for an existing person.
+      tags:
+        - Patients
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPatientRequest'
+      responses:
+        '201':
+          description: Patient registered successfully.
+          headers:
+            Location:
+              description: URI of the newly created patient resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseWithPatientId'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/family-members:
+    post:
+      operationId: addPatientFamilyMember
+      summary: Add family member
+      description: Associates a family member with an existing patient.
+      tags:
+        - Family
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddFamilyMemberRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionCompleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/family-members/{memberId}:
+    delete:
+      operationId: removePatientFamilyMember
+      summary: Remove family member
+      description: Removes a family member association from a patient.
+      tags:
+        - Family
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionCompleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/appointments:
+    post:
+      operationId: registerPatientAppointment
+      summary: Register appointment
+      description: Records a social-care appointment for a patient.
+      tags:
+        - Appointments
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterAppointmentRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/ActionCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/referrals:
+    post:
+      operationId: createPatientReferral
+      summary: Create referral
+      description: Creates a referral to another service for a patient.
+      tags:
+        - Referrals
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReferralRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/ActionCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/rights-violations:
+    post:
+      operationId: reportPatientRightsViolation
+      summary: Report rights violation
+      description: Reports a rights violation related to a patient context.
+      tags:
+        - Compliance
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRightsViolationRequest'
+      responses:
+        '201':
+          description: Rights violation reported successfully.
+          headers:
+            Location:
+              description: URI of the created rights violation report.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseWithActionResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/housing-condition:
+    patch:
+      operationId: updatePatientHousingCondition
+      summary: Update housing condition
+      description: Updates housing condition assessment for a patient.
+      tags:
+        - Socioeconomic
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HousingCondition'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionCompleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/socioeconomic-situation:
+    patch:
+      operationId: updatePatientSocioEconomicSituation
+      summary: Update socioeconomic situation
+      description: Updates socioeconomic assessment data for a patient.
+      tags:
+        - Socioeconomic
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SocioEconomicSituation'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionCompleted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      description: Patient identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/UuidV7'
+    MemberId:
+      name: memberId
+      in: path
+      required: true
+      description: Family member person identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/UuidV7'
+
+  schemas:
+    UuidV7:
+      $ref: ../model/schemas/UuidV7.yaml
+    RegisterPatientRequest:
+      $ref: ../model/schemas/RegisterPatientRequest.yaml
+    AddFamilyMemberRequest:
+      $ref: ../model/schemas/AddFamilyMemberRequest.yaml
+    RegisterAppointmentRequest:
+      $ref: ../model/schemas/RegisterAppointmentRequest.yaml
+    CreateReferralRequest:
+      $ref: ../model/schemas/CreateReferralRequest.yaml
+    ReportRightsViolationRequest:
+      $ref: ../model/schemas/ReportRightsViolationRequest.yaml
+    HousingCondition:
+      $ref: ../model/schemas/HousingCondition.yaml
+    SocioEconomicSituation:
+      $ref: ../model/schemas/SocioEconomicSituation.yaml
+    SuccessResponseWithPatientId:
+      $ref: ../model/schemas/SuccessResponseWithPatientId.yaml
+    SuccessResponseWithActionResult:
+      $ref: ../model/schemas/SuccessResponseWithActionResult.yaml
+    ErrorResponse:
+      $ref: ../model/schemas/ErrorResponse.yaml
+
+  responses:
+    ActionCompleted:
+      description: Operation completed successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponseWithActionResult'
+
+    ActionCreated:
+      description: Resource or record created successfully.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponseWithActionResult'
+
+    BadRequest:
+      description: Invalid input data.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Conflict with current resource state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Target resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    UnprocessableEntity:
+      description: Business validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Unexpected server-side failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

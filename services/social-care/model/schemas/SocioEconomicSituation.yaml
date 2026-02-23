@@ -1,0 +1,53 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SocioEconomicSituation
+type: object
+additionalProperties: false
+required:
+  - totalFamilyIncome
+  - incomePerCapita
+  - receivesSocialBenefit
+  - socialBenefits
+  - mainSourceOfIncome
+  - hasUnemployed
+properties:
+  totalFamilyIncome:
+    type: number
+    minimum: 0
+  incomePerCapita:
+    type: number
+    minimum: 0
+  receivesSocialBenefit:
+    type: boolean
+  socialBenefits:
+    type: array
+    maxItems: 100
+    items:
+      $ref: ./SocialBenefit.yaml
+  mainSourceOfIncome:
+    type: string
+    minLength: 1
+    maxLength: 200
+    pattern: ^.*\S.*$
+  hasUnemployed:
+    type: boolean
+allOf:
+  - if:
+      properties:
+        receivesSocialBenefit:
+          const: true
+      required:
+        - receivesSocialBenefit
+    then:
+      properties:
+        socialBenefits:
+          minItems: 1
+  - if:
+      properties:
+        receivesSocialBenefit:
+          const: false
+      required:
+        - receivesSocialBenefit
+    then:
+      properties:
+        socialBenefits:
+          maxItems: 0

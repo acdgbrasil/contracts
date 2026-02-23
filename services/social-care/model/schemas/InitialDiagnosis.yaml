@@ -1,0 +1,20 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: InitialDiagnosis
+type: object
+additionalProperties: false
+required:
+  - icdCode
+  - date
+  - description
+properties:
+  icdCode:
+    $ref: ./ICD10Code.yaml
+  date:
+    $ref: ./IsoDate.yaml
+    description: Diagnosis date in ISO 8601 date format.
+    example: "2024-01-01"
+  description:
+    type: string
+    minLength: 10
+    maxLength: 2000
+    description: Detailed diagnosis notes.

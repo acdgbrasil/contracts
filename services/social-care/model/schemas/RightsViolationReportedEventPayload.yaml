@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RightsViolationReportedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - reportId
+      - victimId
+      - violationType
+    properties:
+      patientId:
+        $ref: ./UuidV7.yaml
+      reportId:
+        $ref: ./UuidV7.yaml
+      victimId:
+        $ref: ./UuidV7.yaml
+      violationType:
+        $ref: ./ViolationType.yaml
