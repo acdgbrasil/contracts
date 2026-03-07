@@ -18,10 +18,10 @@ properties:
       - violationType
     properties:
       patientId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       reportId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       victimId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       violationType:
         $ref: ./ViolationType.yaml

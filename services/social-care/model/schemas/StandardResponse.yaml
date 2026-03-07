@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: StandardResponse
+description: Generic response envelope used by all successful GET endpoints.
+type: object
+additionalProperties: false
+required:
+  - data
+  - meta
+properties:
+  data: {}
+  meta:
+    type: object
+    additionalProperties: false
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        $ref: ./IsoDateTime.yaml

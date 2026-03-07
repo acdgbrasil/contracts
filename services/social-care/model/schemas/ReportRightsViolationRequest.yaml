@@ -5,14 +5,15 @@ additionalProperties: false
 required:
   - victimId
   - violationType
-  - reportDate
-  - incidentDate
   - descriptionOfFact
 properties:
   victimId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml
   violationType:
     $ref: ./ViolationType.yaml
+  violationTypeId:
+    $ref: ./Uuid.yaml
+    description: Lookup ID for violation type (dominio_tipo_violacao).
   reportDate:
     $ref: ./IsoDate.yaml
   incidentDate:

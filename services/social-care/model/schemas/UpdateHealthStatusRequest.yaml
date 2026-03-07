@@ -1,0 +1,54 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateHealthStatusRequest
+type: object
+additionalProperties: false
+required:
+  - deficiencies
+  - gestatingMembers
+  - constantCareNeeds
+  - foodInsecurity
+properties:
+  deficiencies:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - deficiencyTypeId
+        - needsConstantCare
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        deficiencyTypeId:
+          $ref: ./Uuid.yaml
+          description: Lookup ID for deficiency type (dominio_tipo_deficiencia).
+        needsConstantCare:
+          type: boolean
+        responsibleCaregiverName:
+          type: string
+          maxLength: 200
+  gestatingMembers:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - monthsGestation
+        - startedPrenatalCare
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        monthsGestation:
+          type: integer
+          minimum: 1
+          maximum: 10
+        startedPrenatalCare:
+          type: boolean
+  constantCareNeeds:
+    type: array
+    items:
+      type: string
+  foodInsecurity:
+    type: boolean

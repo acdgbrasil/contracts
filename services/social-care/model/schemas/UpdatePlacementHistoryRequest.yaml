@@ -1,0 +1,50 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdatePlacementHistoryRequest
+type: object
+additionalProperties: false
+required:
+  - registries
+  - collectiveSituations
+  - separationChecklist
+properties:
+  registries:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - startDate
+        - reason
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        startDate:
+          $ref: ./IsoDateTime.yaml
+        endDate:
+          $ref: ./IsoDateTime.yaml
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 2000
+  collectiveSituations:
+    type: object
+    additionalProperties: false
+    properties:
+      homeLossReport:
+        type: string
+        maxLength: 2000
+      thirdPartyGuardReport:
+        type: string
+        maxLength: 2000
+  separationChecklist:
+    type: object
+    additionalProperties: false
+    required:
+      - adultInPrison
+      - adolescentInInternment
+    properties:
+      adultInPrison:
+        type: boolean
+      adolescentInInternment:
+        type: boolean

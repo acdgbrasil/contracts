@@ -1,0 +1,14 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateSocialIdentityRequest
+type: object
+additionalProperties: false
+required:
+  - typeId
+properties:
+  typeId:
+    $ref: ./Uuid.yaml
+    description: Lookup ID for social identity type (dominio_tipo_identidade).
+  description:
+    type: string
+    maxLength: 500
+    description: Optional description when type requires elaboration.

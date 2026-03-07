@@ -16,6 +16,6 @@ properties:
       - personId
     properties:
       patientId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       personId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml

@@ -1,31 +1,115 @@
 asyncapi: 3.1.0
 info:
   title: Social Care Async Contract
-  version: 1.0.0
-  description: Asynchronous event contracts for social-care service.
+  version: 2.0.0
+  description: |
+    Asynchronous event contracts for the social-care service.
+    Events are published via Transactional Outbox pattern and relayed to NATS.
+    All events carry metadata (eventId, occurredAt, schemaVersion) and an actorId.
 defaultContentType: application/json
 servers:
   production:
-    host: broker.example.com
-    protocol: kafka
+    host: nats:4222
+    protocol: nats
+    description: NATS broker on the edge network.
+
+# ─────────────────────────────── Channels ───────────────────────────────
+
 channels:
+  # Registry — Lifecycle
   social-care.patient.created:
     address: social-care.patient.created
     messages:
       PatientCreated:
         $ref: '#/components/messages/PatientCreated'
 
+  # Registry — Family
   social-care.family-member.added:
     address: social-care.family-member.added
     messages:
       FamilyMemberAdded:
         $ref: '#/components/messages/FamilyMemberAdded'
 
-  social-care.referral.created:
-    address: social-care.referral.created
+  social-care.family-member.removed:
+    address: social-care.family-member.removed
     messages:
-      ReferralCreated:
-        $ref: '#/components/messages/ReferralCreated'
+      FamilyMemberRemoved:
+        $ref: '#/components/messages/FamilyMemberRemoved'
+
+  social-care.primary-caregiver.assigned:
+    address: social-care.primary-caregiver.assigned
+    messages:
+      PrimaryCaregiverAssigned:
+        $ref: '#/components/messages/PrimaryCaregiverAssigned'
+
+  social-care.social-identity.updated:
+    address: social-care.social-identity.updated
+    messages:
+      SocialIdentityUpdated:
+        $ref: '#/components/messages/SocialIdentityUpdated'
+
+  # Assessment
+  social-care.housing-condition.updated:
+    address: social-care.housing-condition.updated
+    messages:
+      HousingConditionUpdated:
+        $ref: '#/components/messages/HousingConditionUpdated'
+
+  social-care.socioeconomic-situation.updated:
+    address: social-care.socioeconomic-situation.updated
+    messages:
+      SocioEconomicSituationUpdated:
+        $ref: '#/components/messages/SocioEconomicSituationUpdated'
+
+  social-care.work-and-income.updated:
+    address: social-care.work-and-income.updated
+    messages:
+      WorkAndIncomeUpdated:
+        $ref: '#/components/messages/WorkAndIncomeUpdated'
+
+  social-care.educational-status.updated:
+    address: social-care.educational-status.updated
+    messages:
+      EducationalStatusUpdated:
+        $ref: '#/components/messages/EducationalStatusUpdated'
+
+  social-care.health-status.updated:
+    address: social-care.health-status.updated
+    messages:
+      HealthStatusUpdated:
+        $ref: '#/components/messages/HealthStatusUpdated'
+
+  social-care.community-support-network.updated:
+    address: social-care.community-support-network.updated
+    messages:
+      CommunitySupportNetworkUpdated:
+        $ref: '#/components/messages/CommunitySupportNetworkUpdated'
+
+  social-care.social-health-summary.updated:
+    address: social-care.social-health-summary.updated
+    messages:
+      SocialHealthSummaryUpdated:
+        $ref: '#/components/messages/SocialHealthSummaryUpdated'
+
+  # Care
+  social-care.appointment.registered:
+    address: social-care.appointment.registered
+    messages:
+      SocialCareAppointmentRegistered:
+        $ref: '#/components/messages/SocialCareAppointmentRegistered'
+
+  social-care.intake-info.updated:
+    address: social-care.intake-info.updated
+    messages:
+      IntakeInfoUpdated:
+        $ref: '#/components/messages/IntakeInfoUpdated'
+
+  # Protection
+  social-care.placement-history.updated:
+    address: social-care.placement-history.updated
+    messages:
+      PlacementHistoryUpdated:
+        $ref: '#/components/messages/PlacementHistoryUpdated'
 
   social-care.rights-violation.reported:
     address: social-care.rights-violation.reported
@@ -33,13 +117,16 @@ channels:
       RightsViolationReported:
         $ref: '#/components/messages/RightsViolationReported'
 
-  social-care.appointment.registered:
-    address: social-care.appointment.registered
+  social-care.referral.created:
+    address: social-care.referral.created
     messages:
-      SocialCareAppointmentRegistered:
-        $ref: '#/components/messages/SocialCareAppointmentRegistered'
+      ReferralCreated:
+        $ref: '#/components/messages/ReferralCreated'
+
+# ─────────────────────────────── Operations ───────────────────────────────
 
 operations:
+  # Registry
   publishPatientCreated:
     action: send
     channel:
@@ -54,12 +141,99 @@ operations:
     messages:
       - $ref: '#/channels/social-care.family-member.added/messages/FamilyMemberAdded'
 
-  publishReferralCreated:
+  publishFamilyMemberRemoved:
     action: send
     channel:
-      $ref: '#/channels/social-care.referral.created'
+      $ref: '#/channels/social-care.family-member.removed'
     messages:
-      - $ref: '#/channels/social-care.referral.created/messages/ReferralCreated'
+      - $ref: '#/channels/social-care.family-member.removed/messages/FamilyMemberRemoved'
+
+  publishPrimaryCaregiverAssigned:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.primary-caregiver.assigned'
+    messages:
+      - $ref: '#/channels/social-care.primary-caregiver.assigned/messages/PrimaryCaregiverAssigned'
+
+  publishSocialIdentityUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.social-identity.updated'
+    messages:
+      - $ref: '#/channels/social-care.social-identity.updated/messages/SocialIdentityUpdated'
+
+  # Assessment
+  publishHousingConditionUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.housing-condition.updated'
+    messages:
+      - $ref: '#/channels/social-care.housing-condition.updated/messages/HousingConditionUpdated'
+
+  publishSocioEconomicSituationUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.socioeconomic-situation.updated'
+    messages:
+      - $ref: '#/channels/social-care.socioeconomic-situation.updated/messages/SocioEconomicSituationUpdated'
+
+  publishWorkAndIncomeUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.work-and-income.updated'
+    messages:
+      - $ref: '#/channels/social-care.work-and-income.updated/messages/WorkAndIncomeUpdated'
+
+  publishEducationalStatusUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.educational-status.updated'
+    messages:
+      - $ref: '#/channels/social-care.educational-status.updated/messages/EducationalStatusUpdated'
+
+  publishHealthStatusUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.health-status.updated'
+    messages:
+      - $ref: '#/channels/social-care.health-status.updated/messages/HealthStatusUpdated'
+
+  publishCommunitySupportNetworkUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.community-support-network.updated'
+    messages:
+      - $ref: '#/channels/social-care.community-support-network.updated/messages/CommunitySupportNetworkUpdated'
+
+  publishSocialHealthSummaryUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.social-health-summary.updated'
+    messages:
+      - $ref: '#/channels/social-care.social-health-summary.updated/messages/SocialHealthSummaryUpdated'
+
+  # Care
+  publishSocialCareAppointmentRegistered:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.appointment.registered'
+    messages:
+      - $ref: '#/channels/social-care.appointment.registered/messages/SocialCareAppointmentRegistered'
+
+  publishIntakeInfoUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.intake-info.updated'
+    messages:
+      - $ref: '#/channels/social-care.intake-info.updated/messages/IntakeInfoUpdated'
+
+  # Protection
+  publishPlacementHistoryUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.placement-history.updated'
+    messages:
+      - $ref: '#/channels/social-care.placement-history.updated/messages/PlacementHistoryUpdated'
 
   publishRightsViolationReported:
     action: send
@@ -68,15 +242,18 @@ operations:
     messages:
       - $ref: '#/channels/social-care.rights-violation.reported/messages/RightsViolationReported'
 
-  publishSocialCareAppointmentRegistered:
+  publishReferralCreated:
     action: send
     channel:
-      $ref: '#/channels/social-care.appointment.registered'
+      $ref: '#/channels/social-care.referral.created'
     messages:
-      - $ref: '#/channels/social-care.appointment.registered/messages/SocialCareAppointmentRegistered'
+      - $ref: '#/channels/social-care.referral.created/messages/ReferralCreated'
+
+# ─────────────────────────────── Components ───────────────────────────────
 
 components:
   messages:
+    # Registry — Lifecycle
     PatientCreated:
       name: PatientCreated
       title: Patient Created
@@ -84,6 +261,7 @@ components:
       payload:
         $ref: ../model/schemas/PatientCreatedEventPayload.yaml
 
+    # Registry — Family
     FamilyMemberAdded:
       name: FamilyMemberAdded
       title: Family Member Added
@@ -91,12 +269,99 @@ components:
       payload:
         $ref: ../model/schemas/FamilyMemberAddedEventPayload.yaml
 
-    ReferralCreated:
-      name: ReferralCreated
-      title: Referral Created
-      summary: Emitted when a referral is created for a patient.
+    FamilyMemberRemoved:
+      name: FamilyMemberRemoved
+      title: Family Member Removed
+      summary: Emitted when a family member is removed from a patient.
       payload:
-        $ref: ../model/schemas/ReferralCreatedEventPayload.yaml
+        $ref: ../model/schemas/FamilyMemberRemovedEventPayload.yaml
+
+    PrimaryCaregiverAssigned:
+      name: PrimaryCaregiverAssigned
+      title: Primary Caregiver Assigned
+      summary: Emitted when a family member is assigned as primary caregiver.
+      payload:
+        $ref: ../model/schemas/PrimaryCaregiverAssignedEventPayload.yaml
+
+    SocialIdentityUpdated:
+      name: SocialIdentityUpdated
+      title: Social Identity Updated
+      summary: Emitted when a patient's social identity is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Assessment (all use before/after diff payload)
+    HousingConditionUpdated:
+      name: HousingConditionUpdated
+      title: Housing Condition Updated
+      summary: Emitted when a patient's housing condition assessment is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    SocioEconomicSituationUpdated:
+      name: SocioEconomicSituationUpdated
+      title: Socioeconomic Situation Updated
+      summary: Emitted when a patient's socioeconomic situation is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    WorkAndIncomeUpdated:
+      name: WorkAndIncomeUpdated
+      title: Work and Income Updated
+      summary: Emitted when a patient's work and income data is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    EducationalStatusUpdated:
+      name: EducationalStatusUpdated
+      title: Educational Status Updated
+      summary: Emitted when a patient's educational status is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    HealthStatusUpdated:
+      name: HealthStatusUpdated
+      title: Health Status Updated
+      summary: Emitted when a patient's health status is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    CommunitySupportNetworkUpdated:
+      name: CommunitySupportNetworkUpdated
+      title: Community Support Network Updated
+      summary: Emitted when a patient's community support network is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    SocialHealthSummaryUpdated:
+      name: SocialHealthSummaryUpdated
+      title: Social Health Summary Updated
+      summary: Emitted when a patient's social health summary is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Care
+    SocialCareAppointmentRegistered:
+      name: SocialCareAppointmentRegistered
+      title: Social Care Appointment Registered
+      summary: Emitted when a social care appointment is registered.
+      payload:
+        $ref: ../model/schemas/SocialCareAppointmentRegisteredEventPayload.yaml
+
+    IntakeInfoUpdated:
+      name: IntakeInfoUpdated
+      title: Intake Info Updated
+      summary: Emitted when a patient's intake information is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Protection
+    PlacementHistoryUpdated:
+      name: PlacementHistoryUpdated
+      title: Placement History Updated
+      summary: Emitted when a patient's placement history is updated.
+      payload:
+        $ref: ../model/schemas/AssessmentUpdatedEventPayload.yaml
 
     RightsViolationReported:
       name: RightsViolationReported
@@ -105,9 +370,9 @@ components:
       payload:
         $ref: ../model/schemas/RightsViolationReportedEventPayload.yaml
 
-    SocialCareAppointmentRegistered:
-      name: SocialCareAppointmentRegistered
-      title: Social Care Appointment Registered
-      summary: Emitted when a social care appointment is registered.
+    ReferralCreated:
+      name: ReferralCreated
+      title: Referral Created
+      summary: Emitted when a referral is created for a patient.
       payload:
-        $ref: ../model/schemas/SocialCareAppointmentRegisteredEventPayload.yaml
+        $ref: ../model/schemas/ReferralCreatedEventPayload.yaml

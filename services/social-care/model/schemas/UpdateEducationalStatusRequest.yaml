@@ -1,0 +1,48 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateEducationalStatusRequest
+type: object
+additionalProperties: false
+required:
+  - memberProfiles
+  - programOccurrences
+properties:
+  memberProfiles:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - canReadWrite
+        - attendsSchool
+        - educationLevelId
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        canReadWrite:
+          type: boolean
+        attendsSchool:
+          type: boolean
+        educationLevelId:
+          $ref: ./Uuid.yaml
+          description: Lookup ID for education level (dominio_escolaridade).
+  programOccurrences:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - date
+        - effectId
+        - isSuspensionRequested
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        date:
+          $ref: ./IsoDateTime.yaml
+        effectId:
+          $ref: ./Uuid.yaml
+          description: Lookup ID for conditionality effect (dominio_efeito_condicionalidade).
+        isSuspensionRequested:
+          type: boolean

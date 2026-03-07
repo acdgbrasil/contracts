@@ -1,0 +1,36 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateWorkAndIncomeRequest
+type: object
+additionalProperties: false
+required:
+  - individualIncomes
+  - socialBenefits
+  - hasRetiredMembers
+properties:
+  individualIncomes:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - memberId
+        - occupationId
+        - hasWorkCard
+        - monthlyAmount
+      properties:
+        memberId:
+          $ref: ./Uuid.yaml
+        occupationId:
+          $ref: ./Uuid.yaml
+          description: Lookup ID for occupation (dominio_condicao_ocupacao).
+        hasWorkCard:
+          type: boolean
+        monthlyAmount:
+          type: number
+          minimum: 0
+  socialBenefits:
+    type: array
+    items:
+      $ref: ./SocialBenefit.yaml
+  hasRetiredMembers:
+    type: boolean

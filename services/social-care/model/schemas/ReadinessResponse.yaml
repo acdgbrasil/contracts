@@ -1,9 +1,12 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-title: PatientCreatedData
+title: ReadinessResponse
 type: object
 additionalProperties: false
 required:
-  - id
+  - status
 properties:
-  id:
-    $ref: ./Uuid.yaml
+  status:
+    type: string
+    enum:
+      - ready
+      - unavailable

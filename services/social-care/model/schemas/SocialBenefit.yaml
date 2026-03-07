@@ -16,4 +16,4 @@ properties:
     type: number
     exclusiveMinimum: 0
   beneficiaryId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml

@@ -19,11 +19,11 @@ properties:
       - status
     properties:
       patientId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       referralId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       referredPersonId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       destinationService:
         $ref: ./ReferralDestinationService.yaml
       status:

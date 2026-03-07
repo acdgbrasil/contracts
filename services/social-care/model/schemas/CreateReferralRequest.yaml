@@ -8,7 +8,7 @@ required:
   - reason
 properties:
   referredPersonId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml
   destinationService:
     $ref: ./ReferralDestinationService.yaml
   reason:
@@ -19,4 +19,4 @@ properties:
   date:
     $ref: ./IsoDate.yaml
   professionalId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml

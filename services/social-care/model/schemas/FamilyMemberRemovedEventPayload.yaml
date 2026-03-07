@@ -1,5 +1,5 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-title: FamilyMemberAddedEventPayload
+title: FamilyMemberRemovedEventPayload
 type: object
 additionalProperties: false
 required:
@@ -14,14 +14,8 @@ properties:
     required:
       - patientId
       - memberId
-      - relationship
     properties:
       patientId:
         $ref: ./Uuid.yaml
       memberId:
         $ref: ./Uuid.yaml
-      relationship:
-        type: string
-        minLength: 1
-        maxLength: 120
-        pattern: ^.*\S.*$

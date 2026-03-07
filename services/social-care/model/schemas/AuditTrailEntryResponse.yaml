@@ -1,0 +1,29 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AuditTrailEntryResponse
+description: Single audit trail entry for a patient aggregate.
+type: object
+additionalProperties: false
+required:
+  - id
+  - aggregateId
+  - eventType
+  - payload
+  - occurredAt
+  - recordedAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  aggregateId:
+    $ref: ./Uuid.yaml
+  eventType:
+    type: string
+  actorId:
+    type: string
+    description: ID of the actor who performed the action (nullable).
+  payload:
+    type: object
+    additionalProperties: true
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+  recordedAt:
+    $ref: ./IsoDateTime.yaml

@@ -1,0 +1,32 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AssessmentUpdatedEventPayload
+description: |
+  Generic payload for all assessment update events. Contains before/after
+  snapshots of the assessment module. Used by: HousingConditionUpdated,
+  SocioEconomicSituationUpdated, WorkAndIncomeUpdated, EducationalStatusUpdated,
+  HealthStatusUpdated, CommunitySupportNetworkUpdated, SocialHealthSummaryUpdated,
+  SocialIdentityUpdated, PlacementHistoryUpdated, IntakeInfoUpdated.
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+    properties:
+      patientId:
+        $ref: ./Uuid.yaml
+      before:
+        type: object
+        additionalProperties: true
+        description: Snapshot of the assessment module before the update (null if first assignment).
+      after:
+        type: object
+        additionalProperties: true
+        description: Snapshot of the assessment module after the update.

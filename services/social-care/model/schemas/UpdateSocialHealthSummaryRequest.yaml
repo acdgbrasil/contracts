@@ -1,0 +1,20 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateSocialHealthSummaryRequest
+type: object
+additionalProperties: false
+required:
+  - requiresConstantCare
+  - hasMobilityImpairment
+  - functionalDependencies
+  - hasRelevantDrugTherapy
+properties:
+  requiresConstantCare:
+    type: boolean
+  hasMobilityImpairment:
+    type: boolean
+  functionalDependencies:
+    type: array
+    items:
+      type: string
+  hasRelevantDrugTherapy:
+    type: boolean

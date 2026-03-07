@@ -1,0 +1,28 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateCommunitySupportNetworkRequest
+type: object
+additionalProperties: false
+required:
+  - hasRelativeSupport
+  - hasNeighborSupport
+  - familyConflicts
+  - patientParticipatesInGroups
+  - familyParticipatesInGroups
+  - patientHasAccessToLeisure
+  - facesDiscrimination
+properties:
+  hasRelativeSupport:
+    type: boolean
+  hasNeighborSupport:
+    type: boolean
+  familyConflicts:
+    type: string
+    maxLength: 2000
+  patientParticipatesInGroups:
+    type: boolean
+  familyParticipatesInGroups:
+    type: boolean
+  patientHasAccessToLeisure:
+    type: boolean
+  facesDiscrimination:
+    type: boolean

@@ -1,5 +1,6 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
-title: PatientCreatedData
+title: IdResponse
+description: Returned when a resource is created (wrapped in StandardResponse).
 type: object
 additionalProperties: false
 required:

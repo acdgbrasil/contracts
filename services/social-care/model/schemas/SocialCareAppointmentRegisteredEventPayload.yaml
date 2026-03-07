@@ -18,10 +18,10 @@ properties:
       - type
     properties:
       patientId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       appointmentId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       professionalInChargeId:
-        $ref: ./UuidV7.yaml
+        $ref: ./Uuid.yaml
       type:
         $ref: ./SocialCareAppointmentType.yaml

@@ -8,7 +8,7 @@ required:
   - schemaVersion
 properties:
   eventId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml
     description: Unique event identifier for idempotency and traceability.
   occurredAt:
     $ref: ./IsoDateTime.yaml

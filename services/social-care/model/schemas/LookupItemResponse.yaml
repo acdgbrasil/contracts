@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: LookupItemResponse
+description: Single item from a domain lookup table.
+type: object
+additionalProperties: false
+required:
+  - id
+  - codigo
+  - descricao
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  codigo:
+    type: string
+    description: Domain code.
+  descricao:
+    type: string
+    description: Human-readable description.

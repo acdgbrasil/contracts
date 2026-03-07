@@ -7,9 +7,13 @@ required:
   - relationship
   - isResiding
   - isCaregiver
+  - hasDisability
+  - requiredDocuments
+  - birthDate
+  - prRelationshipId
 properties:
   memberPersonId:
-    $ref: ./UuidV7.yaml
+    $ref: ./Uuid.yaml
   relationship:
     type: string
     minLength: 1
@@ -19,3 +23,14 @@ properties:
     type: boolean
   isCaregiver:
     type: boolean
+  hasDisability:
+    type: boolean
+  requiredDocuments:
+    type: array
+    items:
+      type: string
+  birthDate:
+    $ref: ./IsoDateTime.yaml
+  prRelationshipId:
+    $ref: ./Uuid.yaml
+    description: Lookup ID for relationship type (dominio_parentesco).

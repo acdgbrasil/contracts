@@ -1,0 +1,426 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientResponse
+description: Full patient aggregate projection returned by GET endpoints.
+type: object
+additionalProperties: false
+required:
+  - patientId
+  - personId
+  - version
+  - familyMembers
+  - diagnoses
+  - appointments
+  - referrals
+  - violationReports
+  - computedAnalytics
+properties:
+  patientId:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  version:
+    type: integer
+    minimum: 0
+  personalData:
+    type: object
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+      motherName:
+        type: string
+      nationality:
+        type: string
+      sex:
+        type: string
+      socialName:
+        type: string
+      phone:
+        type: string
+      birthDate:
+        $ref: ./IsoDateTime.yaml
+  civilDocuments:
+    type: object
+    properties:
+      cpf:
+        type: string
+      nis:
+        type: string
+      rgDocument:
+        type: object
+        properties:
+          number:
+            type: string
+          issuingState:
+            type: string
+          issuingAgency:
+            type: string
+          issueDate:
+            $ref: ./IsoDateTime.yaml
+  address:
+    type: object
+    properties:
+      cep:
+        type: string
+      isShelter:
+        type: boolean
+      residenceLocation:
+        type: string
+      street:
+        type: string
+      neighborhood:
+        type: string
+      number:
+        type: string
+      complement:
+        type: string
+      state:
+        type: string
+      city:
+        type: string
+  socialIdentity:
+    type: object
+    properties:
+      typeId:
+        type: string
+      otherDescription:
+        type: string
+  familyMembers:
+    type: array
+    items:
+      type: object
+      properties:
+        personId:
+          type: string
+        relationshipId:
+          type: string
+        isPrimaryCaregiver:
+          type: boolean
+        residesWithPatient:
+          type: boolean
+        hasDisability:
+          type: boolean
+        requiredDocuments:
+          type: array
+          items:
+            type: string
+        birthDate:
+          $ref: ./IsoDateTime.yaml
+  diagnoses:
+    type: array
+    items:
+      type: object
+      properties:
+        icdCode:
+          type: string
+        description:
+          type: string
+        date:
+          $ref: ./IsoDateTime.yaml
+  housingCondition:
+    $ref: ./HousingCondition.yaml
+  socioeconomicSituation:
+    type: object
+    properties:
+      totalFamilyIncome:
+        type: number
+      incomePerCapita:
+        type: number
+      receivesSocialBenefit:
+        type: boolean
+      hasUnemployed:
+        type: boolean
+      mainSourceOfIncome:
+        type: string
+      socialBenefits:
+        type: array
+        items:
+          type: object
+          properties:
+            benefitName:
+              type: string
+            amount:
+              type: number
+            beneficiaryId:
+              type: string
+  workAndIncome:
+    type: object
+    properties:
+      hasRetiredMembers:
+        type: boolean
+      individualIncomes:
+        type: array
+        items:
+          type: object
+          properties:
+            memberId:
+              type: string
+            occupationId:
+              type: string
+            hasWorkCard:
+              type: boolean
+            monthlyAmount:
+              type: number
+      socialBenefits:
+        type: array
+        items:
+          type: object
+          properties:
+            benefitName:
+              type: string
+            amount:
+              type: number
+            beneficiaryId:
+              type: string
+  educationalStatus:
+    type: object
+    properties:
+      memberProfiles:
+        type: array
+        items:
+          type: object
+          properties:
+            memberId:
+              type: string
+            canReadWrite:
+              type: boolean
+            attendsSchool:
+              type: boolean
+            educationLevelId:
+              type: string
+      programOccurrences:
+        type: array
+        items:
+          type: object
+          properties:
+            memberId:
+              type: string
+            date:
+              $ref: ./IsoDateTime.yaml
+            effectId:
+              type: string
+            isSuspensionRequested:
+              type: boolean
+  healthStatus:
+    type: object
+    properties:
+      foodInsecurity:
+        type: boolean
+      deficiencies:
+        type: array
+        items:
+          type: object
+          properties:
+            memberId:
+              type: string
+            deficiencyTypeId:
+              type: string
+            needsConstantCare:
+              type: boolean
+            responsibleCaregiverName:
+              type: string
+      gestatingMembers:
+        type: array
+        items:
+          type: object
+          properties:
+            memberId:
+              type: string
+            monthsGestation:
+              type: integer
+            startedPrenatalCare:
+              type: boolean
+      constantCareNeeds:
+        type: array
+        items:
+          type: string
+  communitySupportNetwork:
+    type: object
+    properties:
+      hasRelativeSupport:
+        type: boolean
+      hasNeighborSupport:
+        type: boolean
+      familyConflicts:
+        type: string
+      patientParticipatesInGroups:
+        type: boolean
+      familyParticipatesInGroups:
+        type: boolean
+      patientHasAccessToLeisure:
+        type: boolean
+      facesDiscrimination:
+        type: boolean
+  socialHealthSummary:
+    type: object
+    properties:
+      requiresConstantCare:
+        type: boolean
+      hasMobilityImpairment:
+        type: boolean
+      functionalDependencies:
+        type: array
+        items:
+          type: string
+      hasRelevantDrugTherapy:
+        type: boolean
+  placementHistory:
+    type: object
+    properties:
+      individualPlacements:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+            memberId:
+              type: string
+            startDate:
+              $ref: ./IsoDateTime.yaml
+            endDate:
+              $ref: ./IsoDateTime.yaml
+            reason:
+              type: string
+      homeLossReport:
+        type: string
+      thirdPartyGuardReport:
+        type: string
+      adultInPrison:
+        type: boolean
+      adolescentInInternment:
+        type: boolean
+  intakeInfo:
+    type: object
+    properties:
+      ingressTypeId:
+        type: string
+      originName:
+        type: string
+      originContact:
+        type: string
+      serviceReason:
+        type: string
+      linkedSocialPrograms:
+        type: array
+        items:
+          type: object
+          properties:
+            programId:
+              type: string
+            observation:
+              type: string
+  appointments:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          $ref: ./IsoDateTime.yaml
+        professionalId:
+          type: string
+        type:
+          type: string
+        summary:
+          type: string
+        actionPlan:
+          type: string
+  referrals:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          $ref: ./IsoDateTime.yaml
+        professionalId:
+          type: string
+        referredPersonId:
+          type: string
+        destinationService:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+  violationReports:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        reportDate:
+          $ref: ./IsoDateTime.yaml
+        incidentDate:
+          $ref: ./IsoDateTime.yaml
+        victimId:
+          type: string
+        violationType:
+          type: string
+        descriptionOfFact:
+          type: string
+        actionsTaken:
+          type: string
+  computedAnalytics:
+    type: object
+    description: Server-calculated analytics based on patient data.
+    properties:
+      housing:
+        type: object
+        properties:
+          density:
+            type: number
+          isOvercrowded:
+            type: boolean
+      financial:
+        type: object
+        properties:
+          totalWorkIncome:
+            type: number
+          perCapitaWorkIncome:
+            type: number
+          totalGlobalIncome:
+            type: number
+          perCapitaGlobalIncome:
+            type: number
+      ageProfile:
+        type: object
+        properties:
+          range0to6:
+            type: integer
+          range7to14:
+            type: integer
+          range15to17:
+            type: integer
+          range18to29:
+            type: integer
+          range30to59:
+            type: integer
+          range60to64:
+            type: integer
+          range65to69:
+            type: integer
+          range70Plus:
+            type: integer
+          totalMembers:
+            type: integer
+      educationalVulnerabilities:
+        type: object
+        properties:
+          notInSchool0to5:
+            type: integer
+          notInSchool6to14:
+            type: integer
+          notInSchool15to17:
+            type: integer
+          illiteracy10to17:
+            type: integer
+          illiteracy18to59:
+            type: integer
+          illiteracy60Plus:
+            type: integer
