@@ -3,39 +3,52 @@ title: HousingCondition
 type: object
 additionalProperties: false
 required:
-  - housingConditionType
+  - type
   - wallMaterial
   - numberOfRooms
+  - numberOfBedrooms
   - numberOfBathrooms
-  - waterSupplyType
+  - waterSupply
+  - hasPipedWater
   - electricityAccess
-  - sewerDisposalMethod
-  - wasteCollectionType
+  - sewageDisposal
+  - wasteCollection
   - accessibilityLevel
   - isInGeographicRiskArea
+  - hasDifficultAccess
   - isInSocialConflictArea
+  - hasDiagnosticObservations
 properties:
-  housingConditionType:
+  type:
     $ref: ./HousingConditionType.yaml
   wallMaterial:
     $ref: ./WallMaterial.yaml
   numberOfRooms:
     type: integer
     minimum: 0
+  numberOfBedrooms:
+    type: integer
+    minimum: 0
   numberOfBathrooms:
     type: integer
     minimum: 0
-  waterSupplyType:
+  waterSupply:
     $ref: ./WaterSupplyType.yaml
+  hasPipedWater:
+    type: boolean
   electricityAccess:
     $ref: ./ElectricityAccess.yaml
-  sewerDisposalMethod:
+  sewageDisposal:
     $ref: ./SewageDisposalMethod.yaml
-  wasteCollectionType:
+  wasteCollection:
     $ref: ./WasteCollectionType.yaml
   accessibilityLevel:
     $ref: ./AccessibilityLevel.yaml
   isInGeographicRiskArea:
     type: boolean
+  hasDifficultAccess:
+    type: boolean
   isInSocialConflictArea:
+    type: boolean
+  hasDiagnosticObservations:
     type: boolean

@@ -651,7 +651,6 @@ paths:
         dominio_unidade_realizacao.
       tags:
         - Lookup
-      security: []
       parameters:
         - name: tableName
           in: path

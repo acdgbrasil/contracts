@@ -4,7 +4,6 @@ type: object
 additionalProperties: false
 required:
   - professionalId
-  - summary
 properties:
   professionalId:
     $ref: ./Uuid.yaml
