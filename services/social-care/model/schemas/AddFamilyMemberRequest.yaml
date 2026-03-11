@@ -30,7 +30,7 @@ properties:
     items:
       type: string
   birthDate:
-    $ref: ./IsoDateTime.yaml
+    $ref: ./IsoDate.yaml
   prRelationshipId:
     $ref: ./Uuid.yaml
     description: Lookup ID for relationship type (dominio_parentesco).

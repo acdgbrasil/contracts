@@ -23,6 +23,7 @@ properties:
     minimum: 0
   personalData:
     type: object
+    additionalProperties: false
     properties:
       firstName:
         type: string
@@ -34,21 +35,26 @@ properties:
         type: string
       sex:
         type: string
+        enum: [male, female]
       socialName:
         type: string
       phone:
         type: string
       birthDate:
-        $ref: ./IsoDateTime.yaml
+        $ref: ./IsoDate.yaml
   civilDocuments:
     type: object
+    additionalProperties: false
     properties:
       cpf:
         type: string
+        pattern: ^\d{11}$
       nis:
         type: string
+        pattern: ^\d{11}$
       rgDocument:
         type: object
+        additionalProperties: false
         properties:
           number:
             type: string
@@ -57,12 +63,14 @@ properties:
           issuingAgency:
             type: string
           issueDate:
-            $ref: ./IsoDateTime.yaml
+            $ref: ./IsoDate.yaml
   address:
     type: object
+    additionalProperties: false
     properties:
       cep:
         type: string
+        pattern: ^\d{8}$
       isShelter:
         type: boolean
       residenceLocation:
@@ -81,20 +89,22 @@ properties:
         type: string
   socialIdentity:
     type: object
+    additionalProperties: false
     properties:
       typeId:
-        type: string
-      otherDescription:
+        $ref: ./Uuid.yaml
+      description:
         type: string
   familyMembers:
     type: array
     items:
       type: object
+      additionalProperties: false
       properties:
         personId:
-          type: string
+          $ref: ./Uuid.yaml
         relationshipId:
-          type: string
+          $ref: ./Uuid.yaml
         isPrimaryCaregiver:
           type: boolean
         residesWithPatient:
@@ -106,22 +116,24 @@ properties:
           items:
             type: string
         birthDate:
-          $ref: ./IsoDateTime.yaml
+          $ref: ./IsoDate.yaml
   diagnoses:
     type: array
     items:
       type: object
+      additionalProperties: false
       properties:
         icdCode:
-          type: string
+          $ref: ./ICD10Code.yaml
         description:
           type: string
         date:
-          $ref: ./IsoDateTime.yaml
+          $ref: ./IsoDate.yaml
   housingCondition:
     $ref: ./HousingCondition.yaml
   socioeconomicSituation:
     type: object
+    additionalProperties: false
     properties:
       totalFamilyIncome:
         type: number
@@ -136,16 +148,10 @@ properties:
       socialBenefits:
         type: array
         items:
-          type: object
-          properties:
-            benefitName:
-              type: string
-            amount:
-              type: number
-            beneficiaryId:
-              type: string
+          $ref: ./SocialBenefit.yaml
   workAndIncome:
     type: object
+    additionalProperties: false
     properties:
       hasRetiredMembers:
         type: boolean
@@ -153,11 +159,12 @@ properties:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             occupationId:
-              type: string
+              $ref: ./Uuid.yaml
             hasWorkCard:
               type: boolean
             monthlyAmount:
@@ -165,45 +172,42 @@ properties:
       socialBenefits:
         type: array
         items:
-          type: object
-          properties:
-            benefitName:
-              type: string
-            amount:
-              type: number
-            beneficiaryId:
-              type: string
+          $ref: ./SocialBenefit.yaml
   educationalStatus:
     type: object
+    additionalProperties: false
     properties:
       memberProfiles:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             canReadWrite:
               type: boolean
             attendsSchool:
               type: boolean
             educationLevelId:
-              type: string
+              $ref: ./Uuid.yaml
       programOccurrences:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             date:
               $ref: ./IsoDateTime.yaml
             effectId:
-              type: string
+              $ref: ./Uuid.yaml
             isSuspensionRequested:
               type: boolean
   healthStatus:
     type: object
+    additionalProperties: false
     properties:
       foodInsecurity:
         type: boolean
@@ -211,11 +215,12 @@ properties:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             deficiencyTypeId:
-              type: string
+              $ref: ./Uuid.yaml
             needsConstantCare:
               type: boolean
             responsibleCaregiverName:
@@ -224,11 +229,14 @@ properties:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             monthsGestation:
               type: integer
+              minimum: 1
+              maximum: 10
             startedPrenatalCare:
               type: boolean
       constantCareNeeds:
@@ -237,6 +245,7 @@ properties:
           type: string
   communitySupportNetwork:
     type: object
+    additionalProperties: false
     properties:
       hasRelativeSupport:
         type: boolean
@@ -254,6 +263,7 @@ properties:
         type: boolean
   socialHealthSummary:
     type: object
+    additionalProperties: false
     properties:
       requiresConstantCare:
         type: boolean
@@ -267,16 +277,18 @@ properties:
         type: boolean
   placementHistory:
     type: object
+    additionalProperties: false
     properties:
       individualPlacements:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             id:
-              type: string
+              $ref: ./Uuid.yaml
             memberId:
-              type: string
+              $ref: ./Uuid.yaml
             startDate:
               $ref: ./IsoDateTime.yaml
             endDate:
@@ -293,9 +305,10 @@ properties:
         type: boolean
   intakeInfo:
     type: object
+    additionalProperties: false
     properties:
       ingressTypeId:
-        type: string
+        $ref: ./Uuid.yaml
       originName:
         type: string
       originContact:
@@ -306,24 +319,26 @@ properties:
         type: array
         items:
           type: object
+          additionalProperties: false
           properties:
             programId:
-              type: string
+              $ref: ./Uuid.yaml
             observation:
               type: string
   appointments:
     type: array
     items:
       type: object
+      additionalProperties: false
       properties:
         id:
-          type: string
+          $ref: ./Uuid.yaml
         date:
           $ref: ./IsoDateTime.yaml
         professionalId:
-          type: string
+          $ref: ./Uuid.yaml
         type:
-          type: string
+          $ref: ./SocialCareAppointmentType.yaml
         summary:
           type: string
         actionPlan:
@@ -332,46 +347,50 @@ properties:
     type: array
     items:
       type: object
+      additionalProperties: false
       properties:
         id:
-          type: string
+          $ref: ./Uuid.yaml
         date:
-          $ref: ./IsoDateTime.yaml
+          $ref: ./IsoDate.yaml
         professionalId:
-          type: string
+          $ref: ./Uuid.yaml
         referredPersonId:
-          type: string
+          $ref: ./Uuid.yaml
         destinationService:
-          type: string
+          $ref: ./ReferralDestinationService.yaml
         reason:
           type: string
         status:
-          type: string
+          $ref: ./ReferralStatus.yaml
   violationReports:
     type: array
     items:
       type: object
+      additionalProperties: false
       properties:
         id:
-          type: string
+          $ref: ./Uuid.yaml
         reportDate:
-          $ref: ./IsoDateTime.yaml
+          $ref: ./IsoDate.yaml
         incidentDate:
-          $ref: ./IsoDateTime.yaml
+          $ref: ./IsoDate.yaml
         victimId:
-          type: string
+          $ref: ./Uuid.yaml
         violationType:
-          type: string
+          $ref: ./ViolationType.yaml
         descriptionOfFact:
           type: string
         actionsTaken:
           type: string
   computedAnalytics:
     type: object
+    additionalProperties: false
     description: Server-calculated analytics based on patient data.
     properties:
       housing:
         type: object
+        additionalProperties: false
         properties:
           density:
             type: number
@@ -379,6 +398,7 @@ properties:
             type: boolean
       financial:
         type: object
+        additionalProperties: false
         properties:
           totalWorkIncome:
             type: number
@@ -390,6 +410,7 @@ properties:
             type: number
       ageProfile:
         type: object
+        additionalProperties: false
         properties:
           range0to6:
             type: integer
@@ -411,6 +432,7 @@ properties:
             type: integer
       educationalVulnerabilities:
         type: object
+        additionalProperties: false
         properties:
           notInSchool0to5:
             type: integer

@@ -44,7 +44,7 @@ jobs:
           while IFS= read -r file; do
             [ -z "$file" ] && continue
             echo "Linting $file"
-            npx --yes @redocly/cli@latest lint "$file"
+            npx --yes @redocly/cli@latest lint --config .redocly.yaml "$file"
           done <<< "$files"
 
       - name: Validate AsyncAPI specs

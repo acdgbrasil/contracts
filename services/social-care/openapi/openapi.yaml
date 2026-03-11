@@ -44,6 +44,8 @@ paths:
       responses:
         '200':
           description: Service is alive.
+        '404':
+          description: Endpoint not found.
 
   /ready:
     servers:
@@ -62,6 +64,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReadinessResponse'
+        '404':
+          description: Endpoint not found.
         '503':
           description: Service is unavailable (database unreachable).
           content:
@@ -449,6 +453,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -475,6 +481,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -749,6 +757,7 @@ components:
     # Composed response wrappers (inline)
     StandardIdResponse:
       type: object
+      additionalProperties: false
       required:
         - data
         - meta
@@ -757,15 +766,16 @@ components:
           $ref: '#/components/schemas/IdResponse'
         meta:
           type: object
+          additionalProperties: false
           required:
             - timestamp
           properties:
             timestamp:
-              type: string
-              format: date-time
+              $ref: '#/components/schemas/IsoDateTime'
 
     StandardPatientResponse:
       type: object
+      additionalProperties: false
       required:
         - data
         - meta
@@ -774,15 +784,16 @@ components:
           $ref: '#/components/schemas/PatientResponse'
         meta:
           type: object
+          additionalProperties: false
           required:
             - timestamp
           properties:
             timestamp:
-              type: string
-              format: date-time
+              $ref: '#/components/schemas/IsoDateTime'
 
     StandardAuditTrailResponse:
       type: object
+      additionalProperties: false
       required:
         - data
         - meta
@@ -793,15 +804,16 @@ components:
             $ref: '#/components/schemas/AuditTrailEntryResponse'
         meta:
           type: object
+          additionalProperties: false
           required:
             - timestamp
           properties:
             timestamp:
-              type: string
-              format: date-time
+              $ref: '#/components/schemas/IsoDateTime'
 
     StandardLookupResponse:
       type: object
+      additionalProperties: false
       required:
         - data
         - meta
@@ -812,12 +824,12 @@ components:
             $ref: '#/components/schemas/LookupItemResponse'
         meta:
           type: object
+          additionalProperties: false
           required:
             - timestamp
           properties:
             timestamp:
-              type: string
-              format: date-time
+              $ref: '#/components/schemas/IsoDateTime'
 
     # Request schemas
     RegisterPatientRequest:

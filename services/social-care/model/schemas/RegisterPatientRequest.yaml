@@ -48,7 +48,7 @@ properties:
       socialName:
         type: string
       birthDate:
-        $ref: ./IsoDateTime.yaml
+        $ref: ./IsoDate.yaml
       phone:
         type: string
   civilDocuments:
@@ -77,7 +77,7 @@ properties:
           issuingAgency:
             type: string
           issueDate:
-            $ref: ./IsoDateTime.yaml
+            $ref: ./IsoDate.yaml
   address:
     type: object
     additionalProperties: false
