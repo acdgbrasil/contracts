@@ -1,0 +1,178 @@
+# =============================================================================
+# Analytics — Indicadores Calculados
+# =============================================================================
+# Estes valores são computados (não persistidos diretamente) a partir dos dados
+# do agregado Patient. O BFF deve replicar estes cálculos para exibição offline.
+# Referência: social-care/Sources/social-care-s/Domain/Assessment/Analytics/
+# =============================================================================
+
+# =============================================================================
+# HOUSING ANALYTICS (Indicadores Habitacionais)
+# =============================================================================
+housing:
+  service: HousingAnalyticsService
+
+  density:
+    description: "Densidade habitacional = total de moradores / número de quartos"
+    formula: |
+      memberCount = max(totalFamilyMembers, 1)
+      bedroomCount = max(numberOfBedrooms, 1)
+      density = memberCount / bedroomCount
+    return_type: double
+
+  isOvercrowded:
+    description: "Superlotação = density > 3.0"
+    formula: "density(members, bedrooms) > 3.0"
+    threshold: 3.0
+    return_type: boolean
+
+# =============================================================================
+# FINANCIAL ANALYTICS (Indicadores Financeiros)
+# =============================================================================
+financial:
+  service: FinancialAnalyticsService
+
+  indicators:
+    totalWorkIncome:
+      label: "RTF_S (Renda Total do Trabalho)"
+      formula: "sum(individualIncomes[].monthlyAmount)"
+      return_type: double
+
+    perCapitaWorkIncome:
+      label: "RPC_S (Renda Per Capita do Trabalho)"
+      formula: |
+        memberCount = max(totalFamilyMembers, 1)
+        totalWorkIncome / memberCount
+      return_type: double
+
+    totalGlobalIncome:
+      label: "RTG (Renda Total Global)"
+      formula: "totalWorkIncome + sum(socialBenefits[].amount)"
+      return_type: double
+
+    perCapitaGlobalIncome:
+      label: "RPC_G (Renda Per Capita Global)"
+      formula: |
+        memberCount = max(totalFamilyMembers, 1)
+        totalGlobalIncome / memberCount
+      return_type: double
+
+  notes: |
+    - memberCount NUNCA é zero (mínimo 1) para evitar divisão por zero.
+    - Todos os valores monetários em Real (BRL).
+
+# =============================================================================
+# FAMILY AGE PROFILE (Perfil Etário da Família)
+# =============================================================================
+age_profile:
+  service: FamilyAnalytics
+
+  description: "Distribuição de membros por faixa etária"
+  calculation: |
+    Para cada familyMember, calcular idade via birthDate.years(at: now).
+    Atribuir ao bucket correspondente.
+
+  buckets:
+    range0to6:
+      label: "0-6 anos"
+      min_age: 0
+      max_age: 6
+
+    range7to14:
+      label: "7-14 anos"
+      min_age: 7
+      max_age: 14
+
+    range15to17:
+      label: "15-17 anos"
+      min_age: 15
+      max_age: 17
+
+    range18to29:
+      label: "18-29 anos"
+      min_age: 18
+      max_age: 29
+
+    range30to59:
+      label: "30-59 anos"
+      min_age: 30
+      max_age: 59
+
+    range60to64:
+      label: "60-64 anos"
+      min_age: 60
+      max_age: 64
+
+    range65to69:
+      label: "65-69 anos"
+      min_age: 65
+      max_age: 69
+
+    range70Plus:
+      label: "70+ anos"
+      min_age: 70
+      max_age: null  # sem limite superior
+
+  output:
+    totalMembers: "sum de todos os buckets"
+    distribution: "mapa bucket → count"
+
+# =============================================================================
+# EDUCATIONAL VULNERABILITIES (Vulnerabilidades Educacionais)
+# =============================================================================
+educational:
+  service: EducationAnalyticsService
+
+  description: "Identifica vulnerabilidades educacionais por faixa etária"
+
+  vulnerability_types:
+    notInSchool:
+      label: "Fora da escola"
+      check: "attendsSchool == false"
+
+    illiteracy:
+      label: "Analfabetismo"
+      check: "canReadWrite == false"
+
+  age_ranges:
+    - range: "0-5"
+      min_age: 0
+      max_age: 5
+      detect: [notInSchool]
+
+    - range: "6-14"
+      min_age: 6
+      max_age: 14
+      detect: [notInSchool]
+
+    - range: "15-17"
+      min_age: 15
+      max_age: 17
+      detect: [notInSchool]
+
+    - range: "10-17"
+      min_age: 10
+      max_age: 17
+      detect: [illiteracy]
+
+    - range: "18-59"
+      min_age: 18
+      max_age: 59
+      detect: [illiteracy]
+
+    - range: "60+"
+      min_age: 60
+      max_age: null
+      detect: [illiteracy]
+
+  output:
+    type: "mapa de (vulnerability_type, age_range) → count"
+    example: |
+      {
+        "notInSchool_0-5": 1,
+        "notInSchool_6-14": 0,
+        "notInSchool_15-17": 0,
+        "illiteracy_10-17": 0,
+        "illiteracy_18-59": 2,
+        "illiteracy_60+": 1
+      }

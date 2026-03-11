@@ -1,0 +1,172 @@
+# =============================================================================
+# Cross-Validations — Regras que cruzam múltiplos campos ou agregados
+# =============================================================================
+# Estas regras NÃO vivem dentro de um único VO — dependem de contexto externo.
+# No backend, são executadas por CrossValidator e MetadataValidator.
+# No BFF offline, devem ser executadas após validação individual dos VOs.
+# =============================================================================
+
+# =============================================================================
+# CROSS-FIELD VALIDATIONS (CrossValidator)
+# =============================================================================
+# Requerem dados do agregado Patient para validar.
+
+cross_field_rules:
+
+  # ---------------------------------------------------------------------------
+  # Gestação × Sexo
+  # ---------------------------------------------------------------------------
+  - id: cv_pregnancy_requires_female
+    context: UpdateHealthStatus
+    description: "Membros listados como gestantes devem ter sexo FEMININO"
+    scope: |
+      Apenas a Pessoa de Referência (PR/titular) é validada no backend,
+      pois dados de sexo de outros membros vivem no bounded context people-context.
+      No BFF, se tiver dados de sexo dos membros localmente, validar todos.
+    when:
+      field: gestatingMembers[].memberId
+      exists: true
+    then:
+      check: |
+        Para cada memberId em gestatingMembers:
+          Se memberId == patient.personId (é o titular):
+            patient.personalData.sex DEVE ser "FEMININO"
+    error_code: CV-001
+    message: "Membro gestante deve ter sexo feminino"
+    http_status: 422
+
+  # ---------------------------------------------------------------------------
+  # Acolhimento — Cronologia de datas
+  # ---------------------------------------------------------------------------
+  - id: cv_placement_date_chronology
+    context: UpdatePlacementHistory
+    description: "Data de término deve ser >= data de início para cada registro"
+    when:
+      field: registries[].endDate
+      is_present: true
+    then:
+      check: "registries[i].endDate >= registries[i].startDate"
+    error_code: CV-002
+    message: "Data de término não pode ser anterior à data de início"
+    http_status: 422
+
+  # ---------------------------------------------------------------------------
+  # Acolhimento — Guarda por terceiro requer menor
+  # ---------------------------------------------------------------------------
+  - id: cv_third_party_guard_requires_minor
+    context: UpdatePlacementHistory
+    description: "Se há relato de guarda por terceiro, deve haver membro de 0-17 anos"
+    when:
+      field: collectiveSituations.thirdPartyGuardReport
+      is_not_empty: true
+    then:
+      check: |
+        Pelo menos um familyMember do Patient deve ter:
+          birthDate.years(at: now) >= 0 AND birthDate.years(at: now) <= 17
+    error_code: CV-003
+    message: "Guarda por terceiro requer pelo menos um membro menor de 18 anos na família"
+    http_status: 422
+
+  # ---------------------------------------------------------------------------
+  # Acolhimento — Internação de adolescente requer membro 12-17
+  # ---------------------------------------------------------------------------
+  - id: cv_adolescent_internment_requires_12_17
+    context: UpdatePlacementHistory
+    description: "Se adolescentInInternment == true, deve haver membro de 12-17 anos"
+    when:
+      field: separationChecklist.adolescentInInternment
+      equals: true
+    then:
+      check: |
+        Pelo menos um familyMember do Patient deve ter:
+          birthDate.years(at: now) >= 12 AND birthDate.years(at: now) <= 17
+    error_code: CV-004
+    message: "Internação de adolescente requer pelo menos um membro de 12-17 anos na família"
+    http_status: 422
+
+# =============================================================================
+# METADATA-DRIVEN VALIDATIONS (MetadataValidator)
+# =============================================================================
+# Dependem de flags configuradas nas lookup tables (tabelas de domínio).
+# No BFF offline, as lookup tables devem estar cacheadas com suas flags.
+
+metadata_rules:
+
+  # ---------------------------------------------------------------------------
+  # Benefício Social — Exige certidão de nascimento
+  # ---------------------------------------------------------------------------
+  - id: mv_benefit_requires_birth_certificate
+    context: [UpdateSocioEconomicSituation, UpdateWorkAndIncome]
+    description: "Se o tipo de benefício tem flag exige_registro_nascimento, o campo birthCertificateNumber é obrigatório"
+    lookup_table: dominio_tipo_beneficio
+    lookup_field: exige_registro_nascimento
+    when:
+      field: socialBenefits[].benefitTypeId
+      lookup_flag: exige_registro_nascimento
+      equals: true
+    then:
+      field: socialBenefits[i].birthCertificateNumber
+      required: true
+    error_code: MV-001
+    message: "Número da certidão de nascimento é obrigatório para este tipo de benefício"
+    http_status: 422
+
+  # ---------------------------------------------------------------------------
+  # Benefício Social — Exige CPF do falecido
+  # ---------------------------------------------------------------------------
+  - id: mv_benefit_requires_deceased_cpf
+    context: [UpdateSocioEconomicSituation, UpdateWorkAndIncome]
+    description: "Se o tipo de benefício tem flag exige_cpf_falecido, o campo deceasedCpf é obrigatório"
+    lookup_table: dominio_tipo_beneficio
+    lookup_field: exige_cpf_falecido
+    when:
+      field: socialBenefits[].benefitTypeId
+      lookup_flag: exige_cpf_falecido
+      equals: true
+    then:
+      field: socialBenefits[i].deceasedCpf
+      required: true
+    error_code: MV-002
+    message: "CPF do falecido é obrigatório para este tipo de benefício"
+    http_status: 422
+
+  # ---------------------------------------------------------------------------
+  # Violação de Direitos — Exige descrição
+  # ---------------------------------------------------------------------------
+  - id: mv_violation_requires_description
+    context: ReportRightsViolation
+    description: "Se o tipo de violação tem flag exige_descricao, o campo descriptionOfFact não pode ser vazio"
+    lookup_table: dominio_tipo_violacao
+    lookup_field: exige_descricao
+    when:
+      field: violationTypeId
+      lookup_flag: exige_descricao
+      equals: true
+    then:
+      field: descriptionOfFact
+      check: not_empty_or_whitespace
+    error_code: MV-003
+    message: "Descrição do fato é obrigatória para este tipo de violação"
+    http_status: 422
+
+# =============================================================================
+# NOTAS PARA IMPLEMENTAÇÃO NO BFF OFFLINE
+# =============================================================================
+#
+# 1. LOOKUP TABLES: Sincronizar periodicamente quando online.
+#    Armazenar em SQLite ou similar no dispositivo.
+#    Cada lookup item tem: id, codigo, descricao + flags específicas.
+#
+# 2. DADOS DO AGREGADO: As cross-field validations precisam de dados do Patient
+#    completo (membros da família, sexo, idades). No BFF offline, esses dados
+#    já estão no banco local.
+#
+# 3. ORDEM DE EXECUÇÃO:
+#    a. Validar cada VO individualmente (regras dos YAMLs específicos)
+#    b. Executar cross-field validations
+#    c. Executar metadata-driven validations
+#    d. Validar invariantes do agregado
+#
+# 4. CONFLITOS OFFLINE:
+#    Quando sincronizar, o backend revalida tudo. Se houver conflito
+#    (ex: lookup table mudou), retornar erro 409 com detalhes.

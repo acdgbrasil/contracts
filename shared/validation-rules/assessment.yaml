@@ -1,0 +1,461 @@
+# =============================================================================
+# Assessment — Bounded Context de Avaliação Social
+# =============================================================================
+# VOs de condições habitacionais, saúde, educação, socioeconômica, etc.
+# Referência: social-care/Sources/social-care-s/Domain/Assessment/
+# =============================================================================
+
+value_objects:
+
+  # ---------------------------------------------------------------------------
+  # HousingCondition (Condição Habitacional)
+  # ---------------------------------------------------------------------------
+  HousingCondition:
+    type: object
+    fields:
+      type:
+        type: enum
+        required: true
+        values: [OWNED, RENTED, CEDED, SQUATTED]
+
+      wallMaterial:
+        type: enum
+        required: true
+        values: [MASONRY, FINISHED_WOOD, MAKESHIFT_MATERIALS]
+
+      numberOfRooms:
+        type: integer
+        required: true
+
+      numberOfBedrooms:
+        type: integer
+        required: true
+
+      numberOfBathrooms:
+        type: integer
+        required: true
+
+      waterSupply:
+        type: enum
+        required: true
+        values: [PUBLIC_NETWORK, WELL_OR_SPRING, RAINWATER_HARVEST, WATER_TRUCK, OTHER]
+
+      hasPipedWater:
+        type: boolean
+        required: true
+
+      electricityAccess:
+        type: enum
+        required: true
+        values: [METERED_CONNECTION, IRREGULAR_CONNECTION, NO_ACCESS]
+
+      sewageDisposal:
+        type: enum
+        required: true
+        values: [PUBLIC_SEWER, SEPTIC_TANK, RUDIMENTARY_PIT, OPEN_SEWAGE, NO_BATHROOM]
+
+      wasteCollection:
+        type: enum
+        required: true
+        values: [DIRECT_COLLECTION, INDIRECT_COLLECTION, NO_COLLECTION]
+
+      accessibilityLevel:
+        type: enum
+        required: true
+        values: [FULLY_ACCESSIBLE, PARTIALLY_ACCESSIBLE, NOT_ACCESSIBLE]
+
+      isInGeographicRiskArea:
+        type: boolean
+        required: true
+
+      hasDifficultAccess:
+        type: boolean
+        required: true
+
+      isInSocialConflictArea:
+        type: boolean
+        required: true
+
+      hasDiagnosticObservations:
+        type: boolean
+        required: true
+
+    rules:
+      - id: hc_rooms_non_negative
+        check: gte
+        field: numberOfRooms
+        value: 0
+        error_code: HC-001
+        message: "Número de cômodos não pode ser negativo"
+
+      - id: hc_bedrooms_non_negative
+        check: gte
+        field: numberOfBedrooms
+        value: 0
+        error_code: HC-002
+        message: "Número de quartos não pode ser negativo"
+
+      - id: hc_bathrooms_non_negative
+        check: gte
+        field: numberOfBathrooms
+        value: 0
+        error_code: HC-003
+        message: "Número de banheiros não pode ser negativo"
+
+      - id: hc_bedrooms_lte_rooms
+        check: field_lte_field
+        field_a: numberOfBedrooms
+        field_b: numberOfRooms
+        error_code: HC-004
+        message: "Número de quartos não pode exceder o número total de cômodos"
+
+  # ---------------------------------------------------------------------------
+  # HealthStatus (Condições de Saúde da Família)
+  # ---------------------------------------------------------------------------
+  HealthStatus:
+    type: object
+    description: "Consolida condições de saúde da família. Sem validação no construtor."
+    fields:
+      familyId:
+        type: PatientId
+        required: true
+
+      deficiencies:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            memberId:
+              type: PersonId
+              required: true
+            deficiencyTypeId:
+              type: LookupId       # FK → dominio_tipo_deficiencia
+              required: true
+            needsConstantCare:
+              type: boolean
+              required: true
+            responsibleCaregiverName:
+              type: string
+              required: false
+
+      gestatingMembers:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            memberId:
+              type: PersonId
+              required: true
+            monthsGestation:
+              type: integer
+              required: true
+            startedPrenatalCare:
+              type: boolean
+              required: true
+
+      constantCareNeeds:
+        type: array
+        items: PersonId
+        required: true
+
+      foodInsecurity:
+        type: boolean
+        required: true
+
+    # NOTA: validação de sexo para gestatingMembers é feita pelo CrossValidator (ver cross-validations.yaml)
+
+  # ---------------------------------------------------------------------------
+  # EducationalStatus (Situação Educacional)
+  # ---------------------------------------------------------------------------
+  EducationalStatus:
+    type: object
+    description: "Perfil educacional da família. Sem validação no construtor."
+    fields:
+      familyId:
+        type: PatientId
+        required: true
+
+      memberProfiles:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            memberId:
+              type: PersonId
+              required: true
+            canReadWrite:
+              type: boolean
+              required: true
+            attendsSchool:
+              type: boolean
+              required: true
+            educationLevelId:
+              type: LookupId       # FK → dominio_nivel_escolaridade
+              required: true
+
+      programOccurrences:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            memberId:
+              type: PersonId
+              required: true
+            date:
+              type: TimeStamp
+              required: true
+            effectId:
+              type: LookupId       # FK → dominio_efeito_programa
+              required: true
+            isSuspensionRequested:
+              type: boolean
+              required: true
+
+  # ---------------------------------------------------------------------------
+  # SocioEconomicSituation (Situação Socioeconômica)
+  # ---------------------------------------------------------------------------
+  SocioEconomicSituation:
+    type: object
+    fields:
+      totalFamilyIncome:
+        type: double
+        required: true
+
+      incomePerCapita:
+        type: double
+        required: true
+
+      receivesSocialBenefit:
+        type: boolean
+        required: true
+
+      socialBenefits:
+        type: SocialBenefitsCollection
+        required: true
+
+      mainSourceOfIncome:
+        type: string
+        required: true
+        normalize: [trim]
+
+      hasUnemployed:
+        type: boolean
+        required: true
+
+    rules:
+      - id: ses_income_non_negative
+        check: gte
+        field: totalFamilyIncome
+        value: 0
+        error_code: SES-003
+        message: "Renda familiar total não pode ser negativa"
+
+      - id: ses_per_capita_non_negative
+        check: gte
+        field: incomePerCapita
+        value: 0
+        error_code: SES-004
+        message: "Renda per capita não pode ser negativa"
+
+      - id: ses_per_capita_lte_total
+        check: field_lte_field
+        field_a: incomePerCapita
+        field_b: totalFamilyIncome
+        error_code: SES-006
+        message: "Renda per capita não pode ser maior que a renda familiar total"
+
+      - id: ses_main_source_not_empty
+        check: not_empty
+        field: mainSourceOfIncome
+        error_code: SES-005
+        message: "Fonte principal de renda não pode ser vazia"
+
+      # --- Consistência benefício social ↔ flag ---
+
+      - id: ses_benefit_flag_false_but_has_benefits
+        check: |
+          Se receivesSocialBenefit == false, então socialBenefits DEVE ser vazio.
+        error_code: SES-001
+        message: "Inconsistência: marcou que não recebe benefício, mas há benefícios cadastrados"
+
+      - id: ses_benefit_flag_true_but_empty
+        check: |
+          Se receivesSocialBenefit == true, então socialBenefits NÃO pode ser vazio.
+        error_code: SES-002
+        message: "Inconsistência: marcou que recebe benefício, mas nenhum benefício foi informado"
+
+  # ---------------------------------------------------------------------------
+  # SocialBenefit (Benefício Social - item individual)
+  # ---------------------------------------------------------------------------
+  SocialBenefit:
+    type: object
+    fields:
+      benefitName:
+        type: string
+        required: true
+        normalize: [trim, collapse_whitespace]
+        rules:
+          - id: sb_name_not_empty
+            check: not_empty
+            error_code: SB-001
+            message: "Nome do benefício não pode ser vazio"
+
+      amount:
+        type: double
+        required: true
+        rules:
+          - id: sb_amount_positive
+            check: gt
+            value: 0
+            error_code: SB-002
+            message: "Valor do benefício deve ser maior que zero"
+
+      beneficiaryId:
+        type: PersonId
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # SocialBenefitsCollection (Coleção de Benefícios - com deduplicação)
+  # ---------------------------------------------------------------------------
+  SocialBenefitsCollection:
+    type: array
+    items: SocialBenefit
+    rules:
+      - id: sbc_no_duplicates
+        check: unique_by
+        field: benefitName
+        error_code: SBC-002
+        message: "Não é permitido benefício duplicado (mesmo nome)"
+
+    computed:
+      isEmpty: "items.length == 0"
+      count: "items.length"
+      totalAmount: "sum(items[].amount)"
+
+  # ---------------------------------------------------------------------------
+  # WorkAndIncome (Trabalho e Renda)
+  # ---------------------------------------------------------------------------
+  WorkAndIncome:
+    type: object
+    fields:
+      familyId:
+        type: PatientId
+        required: true
+
+      individualIncomes:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            memberId:
+              type: PersonId
+              required: true
+            occupationId:
+              type: LookupId       # FK → dominio_ocupacao
+              required: true
+            hasWorkCard:
+              type: boolean
+              required: true
+            monthlyAmount:
+              type: double
+              required: true
+              rules:
+                - id: wi_amount_non_negative
+                  check: gte
+                  value: 0
+                  error_code: WI-001
+                  message: "Renda mensal não pode ser negativa"
+
+      socialBenefits:
+        type: array
+        items: SocialBenefit     # mesmas regras do SocialBenefit acima
+        required: true
+
+      hasRetiredMembers:
+        type: boolean
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # CommunitySupportNetwork (Rede de Apoio Comunitário)
+  # ---------------------------------------------------------------------------
+  CommunitySupportNetwork:
+    type: object
+    constants:
+      MAX_FAMILY_CONFLICTS_LENGTH: 300
+    fields:
+      hasRelativeSupport:
+        type: boolean
+        required: true
+
+      hasNeighborSupport:
+        type: boolean
+        required: true
+
+      familyConflicts:
+        type: string
+        required: true
+        normalize: [trim]
+        rules:
+          - id: csn_conflicts_not_whitespace
+            check: not_whitespace_only
+            error_code: CSN-001
+            message: "Conflitos familiares não pode conter apenas espaços em branco"
+
+          - id: csn_conflicts_max_length
+            check: max_length
+            value: 300
+            error_code: CSN-002
+            message: "Conflitos familiares não pode exceder 300 caracteres"
+
+      patientParticipatesInGroups:
+        type: boolean
+        required: true
+
+      familyParticipatesInGroups:
+        type: boolean
+        required: true
+
+      patientHasAccessToLeisure:
+        type: boolean
+        required: true
+
+      facesDiscrimination:
+        type: boolean
+        required: true
+
+  # ---------------------------------------------------------------------------
+  # SocialHealthSummary (Resumo de Saúde Social)
+  # ---------------------------------------------------------------------------
+  SocialHealthSummary:
+    type: object
+    fields:
+      requiresConstantCare:
+        type: boolean
+        required: true
+
+      hasMobilityImpairment:
+        type: boolean
+        required: true
+
+      functionalDependencies:
+        type: array
+        items: string
+        required: true
+        normalize:
+          - trim_each_item          # trim cada item
+          - remove_empty_items      # remover itens vazios após trim
+          - deduplicate             # remover duplicatas preservando ordem
+        rules:
+          - id: shs_items_not_empty
+            check: each_item_not_empty
+            error_code: SHS-001
+            message: "Itens de dependência funcional não podem ser vazios"
+
+      hasRelevantDrugTherapy:
+        type: boolean
+        required: true

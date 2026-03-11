@@ -1,0 +1,312 @@
+# =============================================================================
+# Registry — Bounded Context de Cadastro
+# =============================================================================
+# Agregado Patient, entidade FamilyMember e VOs associados.
+# Referência: social-care/Sources/social-care-s/Domain/Registry/
+# =============================================================================
+
+# =============================================================================
+# VALUE OBJECTS
+# =============================================================================
+
+value_objects:
+
+  # ---------------------------------------------------------------------------
+  # PatientId
+  # ---------------------------------------------------------------------------
+  PatientId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: patient_id_uuid
+        check: custom
+        custom: uuid_format
+        error_code: PATID-001
+        message: "PatientId deve ser um UUID válido"
+    auto_generate: true
+
+  # ---------------------------------------------------------------------------
+  # PersonalData
+  # ---------------------------------------------------------------------------
+  PersonalData:
+    type: object
+    fields:
+      firstName:
+        type: string
+        required: true
+        normalize: [trim, collapse_whitespace]
+        rules:
+          - id: pd_first_name_not_empty
+            check: not_empty
+            error_code: PD-001
+            message: "Nome não pode ser vazio"
+
+      lastName:
+        type: string
+        required: true
+        normalize: [trim, collapse_whitespace]
+        rules:
+          - id: pd_last_name_not_empty
+            check: not_empty
+            error_code: PD-002
+            message: "Sobrenome não pode ser vazio"
+
+      motherName:
+        type: string
+        required: true
+        normalize: [trim, collapse_whitespace]
+        rules:
+          - id: pd_mother_name_not_empty
+            check: not_empty
+            error_code: PD-003
+            message: "Nome da mãe não pode ser vazio"
+
+      nationality:
+        type: string
+        required: true
+        normalize: [trim, collapse_whitespace]
+        rules:
+          - id: pd_nationality_not_empty
+            check: not_empty
+            error_code: PD-004
+            message: "Nacionalidade não pode ser vazia"
+
+      sex:
+        type: enum
+        required: true
+        values: [MASCULINO, FEMININO]
+
+      socialName:
+        type: string
+        required: false
+        normalize: [trim, collapse_whitespace]
+        null_if_empty: true  # se após normalização for "", setar como null
+
+      birthDate:
+        type: TimeStamp
+        required: true
+        rules:
+          - id: pd_birth_date_not_future
+            check: not_future
+            error_code: PD-005
+            message: "Data de nascimento não pode ser no futuro"
+
+      phone:
+        type: string
+        required: false
+        normalize: [trim]   # APENAS trim, sem collapse_whitespace nem validação de formato
+        null_if_empty: true
+
+  # ---------------------------------------------------------------------------
+  # CivilDocuments
+  # ---------------------------------------------------------------------------
+  CivilDocuments:
+    type: object
+    fields:
+      cpf:
+        type: CPF             # referencia kernel.yaml
+        required: false
+
+      nis:
+        type: NIS             # referencia kernel.yaml
+        required: false
+
+      rgDocument:
+        type: RGDocument      # referencia kernel.yaml
+        required: false
+
+    rules:
+      - id: cd_at_least_one
+        check: at_least_one_present
+        fields: [cpf, nis, rgDocument]
+        error_code: CD-001
+        message: "Pelo menos um documento civil deve ser informado (CPF, NIS ou RG)"
+
+  # ---------------------------------------------------------------------------
+  # SocialIdentity
+  # ---------------------------------------------------------------------------
+  SocialIdentity:
+    type: object
+    fields:
+      typeId:
+        type: LookupId        # FK → dominio_tipo_identidade
+        required: true
+
+      otherDescription:
+        type: string
+        required: false        # obrigatório condicionalmente (ver regra abaixo)
+        normalize: [trim]
+        null_if_empty: true
+
+    rules:
+      - id: si_other_requires_description
+        check: conditional_required
+        when:
+          field: typeId
+          is_other_type: true   # quando o tipo selecionado é "OUTRAS"
+        then:
+          field: otherDescription
+          required: true
+        error_code: SI-001
+        message: "Descrição é obrigatória quando o tipo de identidade é 'Outras'"
+
+    note: |
+      O campo `is_other_type` depende da flag na lookup table `dominio_tipo_identidade`.
+      No BFF offline, a lookup table deve estar cacheada localmente para verificar
+      se o typeId selecionado corresponde ao tipo "OUTRAS".
+
+  # ---------------------------------------------------------------------------
+  # RequiredDocument (enum de documentos pendentes de membro familiar)
+  # ---------------------------------------------------------------------------
+  RequiredDocument:
+    type: enum
+    values:
+      CN: "Certidão de Nascimento"
+      RG: "Registro Geral"
+      CTPS: "Carteira de Trabalho e Previdência Social"
+      CPF: "Cadastro de Pessoa Física"
+      TE: "Título de Eleitor"
+
+# =============================================================================
+# ENTIDADES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # FamilyMember
+  # ---------------------------------------------------------------------------
+  FamilyMember:
+    type: object
+    fields:
+      personId:
+        type: PersonId
+        required: true
+
+      relationshipId:
+        type: LookupId         # FK → dominio_parentesco
+        required: true
+
+      isPrimaryCaregiver:
+        type: boolean
+        required: false
+        default: false
+        description: "Controlado via comando AssignPrimaryCaregiver, não setado diretamente"
+
+      residesWithPatient:
+        type: boolean
+        required: true
+
+      hasDisability:
+        type: boolean
+        required: false
+        default: false
+
+      requiredDocuments:
+        type: array
+        items: RequiredDocument
+        normalize:
+          - deduplicate        # remover duplicatas
+          - sort_by: raw_value # ordenar por valor do enum (ascending)
+
+      birthDate:
+        type: TimeStamp
+        required: true
+        description: "Necessário para cálculos de faixa etária (FamilyAnalytics)"
+
+    identity: personId  # igualdade baseada apenas em personId
+
+# =============================================================================
+# AGREGADO
+# =============================================================================
+
+aggregates:
+
+  # ---------------------------------------------------------------------------
+  # Patient (Aggregate Root)
+  # ---------------------------------------------------------------------------
+  Patient:
+    identity: PatientId
+    concurrency: optimistic  # campo `version` para controle de concorrência
+
+    invariants:
+
+      # --- Lifecycle ---
+
+      - id: pat_initial_diagnoses
+        rule: "diagnoses NÃO pode ser vazio na criação"
+        check: array_not_empty
+        field: diagnoses
+        error_code: PAT-001
+        message: "Pelo menos um diagnóstico inicial é obrigatório"
+
+      - id: pat_exactly_one_pr
+        rule: "Deve haver exatamente UMA Pessoa de Referência (PR) na família"
+        check: |
+          Contar quantos familyMembers possuem relationshipId == prRelationshipId.
+          O count DEVE ser exatamente 1.
+        error_code: PAT-002
+        message: "A família deve ter exatamente uma Pessoa de Referência"
+
+      # --- Family Management ---
+
+      - id: pat_no_duplicate_member
+        rule: "Não pode adicionar membro com personId já existente"
+        check: unique_in_collection
+        field: familyMembers[].personId
+        error_code: PAT-003
+        message: "Membro familiar já existe nesta família"
+
+      - id: pat_no_multiple_pr
+        rule: "Não pode ter mais de uma PR ao adicionar novo membro"
+        check: |
+          Se o novo membro tem relationshipId == prRelationshipId,
+          verificar que nenhum membro existente já tem esse relationshipId.
+        error_code: PAT-004
+        message: "Não é permitido mais de uma Pessoa de Referência"
+
+      - id: pat_member_must_exist_for_removal
+        rule: "Membro deve existir na família para ser removido ou promovido"
+        check: exists_in_collection
+        field: familyMembers[].personId
+        error_code: PAT-005
+        message: "Membro familiar não encontrado"
+
+      # --- Interventions Boundary ---
+
+      - id: pat_referral_target_in_boundary
+        rule: "Pessoa encaminhada deve pertencer ao agregado (titular ou membro familiar)"
+        check: |
+          referredPersonId == patient.personId OU
+          referredPersonId está em familyMembers[].personId
+        error_code: PAT-006
+        message: "Pessoa encaminhada não pertence a esta família"
+
+      - id: pat_violation_target_in_boundary
+        rule: "Vítima de violação deve pertencer ao agregado"
+        check: |
+          victimId == patient.personId OU
+          victimId está em familyMembers[].personId
+        error_code: PAT-007
+        message: "Vítima não pertence a esta família"
+
+      # --- Placement Compatibility ---
+
+      - id: pat_adolescent_internment_requires_12_17
+        rule: "Se adolescentInInternment == true, deve haver pelo menos um membro de 12 a 17 anos"
+        check: |
+          Quando separationChecklist.adolescentInInternment == true:
+          Algum familyMember deve ter idade entre 12 e 17 anos (inclusive)
+          calculada via birthDate.years(at: now)
+        error_code: PAT-008
+        message: "Situação de acolhimento incompatível: internação de adolescente requer membro de 12-17 anos"
+
+      - id: pat_guardianship_requires_minor
+        rule: "Se thirdPartyGuardReport não é vazio, deve haver pelo menos um membro de 0 a 17 anos"
+        check: |
+          Quando collectiveSituations.thirdPartyGuardReport != nil/empty:
+          Algum familyMember deve ter idade entre 0 e 17 anos (inclusive)
+        error_code: PAT-009
+        message: "Situação de acolhimento incompatível: guarda por terceiro requer membro menor de idade"

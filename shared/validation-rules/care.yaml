@@ -1,0 +1,211 @@
+# =============================================================================
+# Care — Bounded Context de Atendimento
+# =============================================================================
+# Agregado SocialCareAppointment, VOs Diagnosis, ICDCode, IngressInfo.
+# Referência: social-care/Sources/social-care-s/Domain/Care/
+# =============================================================================
+
+value_objects:
+
+  # ---------------------------------------------------------------------------
+  # AppointmentId
+  # ---------------------------------------------------------------------------
+  AppointmentId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: aid_uuid
+        check: custom
+        custom: uuid_format
+        error_code: AI-001
+        message: "AppointmentId deve ser um UUID válido"
+    auto_generate: true
+
+  # ---------------------------------------------------------------------------
+  # ICDCode (Código CID)
+  # ---------------------------------------------------------------------------
+  ICDCode:
+    type: string
+    normalize:
+      - trim
+      - uppercase
+    rules:
+      - id: icd_not_empty
+        check: not_empty
+        error_code: ICD-001
+        message: "Código CID não pode ser vazio"
+
+    auto_dot:
+      description: |
+        Se o código tem 3+ caracteres e NÃO contém ponto,
+        inserir ponto automaticamente antes do último caractere.
+        Ex: "A169" → "A16.9", "B20" → "B2.0"
+      enabled: true
+
+    methods:
+      normalized: "Remove pontos para comparação (ex: 'A16.9' → 'A169')"
+      isEquivalent: "Compara versões normalizadas (sem ponto)"
+
+  # ---------------------------------------------------------------------------
+  # Diagnosis (Diagnóstico)
+  # ---------------------------------------------------------------------------
+  Diagnosis:
+    type: object
+    fields:
+      id:
+        type: ICDCode
+        required: true
+
+      date:
+        type: TimeStamp
+        required: true
+        rules:
+          - id: diag_date_not_future
+            check: not_future
+            error_code: DIA-001
+            message: "Data do diagnóstico não pode ser no futuro"
+
+          - id: diag_date_year_valid
+            check: year_gte
+            value: 0
+            error_code: DIA-002
+            message: "Ano do diagnóstico deve ser >= 0"
+
+      description:
+        type: string
+        required: true
+        normalize: [trim]
+        rules:
+          - id: diag_description_not_empty
+            check: not_empty
+            error_code: DIA-003
+            message: "Descrição do diagnóstico não pode ser vazia"
+
+  # ---------------------------------------------------------------------------
+  # IngressInfo (Informações de Ingresso no Serviço)
+  # ---------------------------------------------------------------------------
+  IngressInfo:
+    type: object
+    fields:
+      ingressTypeId:
+        type: LookupId            # FK → dominio_tipo_ingresso
+        required: true
+
+      originName:
+        type: string
+        required: false
+        normalize: [trim]
+        null_if_empty: true
+
+      originContact:
+        type: string
+        required: false
+        normalize: [trim]
+        null_if_empty: true
+
+      serviceReason:
+        type: string
+        required: true
+        normalize: [trim]
+        rules:
+          - id: ing_reason_not_empty
+            check: not_empty
+            error_code: ING-001
+            message: "Motivo do atendimento não pode ser vazio"
+
+      linkedSocialPrograms:
+        type: array
+        required: true
+        items:
+          type: object
+          fields:
+            programId:
+              type: LookupId      # FK → dominio_programa_social
+              required: true
+            observation:
+              type: string
+              required: false
+              normalize: [trim]
+              null_if_empty: true
+
+  # ---------------------------------------------------------------------------
+  # AppointmentType (Tipo de Atendimento)
+  # ---------------------------------------------------------------------------
+  AppointmentType:
+    type: enum
+    values:
+      - HOME_VISIT
+      - OFFICE_APPOINTMENT
+      - PHONE_CALL
+      - MULTIDISCIPLINARY
+      - OTHER
+
+# =============================================================================
+# AGREGADO
+# =============================================================================
+
+aggregates:
+
+  # ---------------------------------------------------------------------------
+  # SocialCareAppointment (Atendimento Social)
+  # ---------------------------------------------------------------------------
+  SocialCareAppointment:
+    identity: AppointmentId
+    fields:
+      id:
+        type: AppointmentId
+        required: true
+
+      date:
+        type: TimeStamp
+        required: true
+
+      professionalInChargeId:
+        type: ProfessionalId
+        required: true
+
+      type:
+        type: AppointmentType
+        required: true
+
+      summary:
+        type: string
+        required: false
+        normalize: [trim]
+        max_length: 500
+
+      actionPlan:
+        type: string
+        required: false
+        normalize: [trim]
+        max_length: 2000
+
+    rules:
+      - id: sca_date_not_future
+        check: not_future
+        field: date
+        error_code: SCA-001
+        message: "Data do atendimento não pode ser no futuro"
+
+      - id: sca_at_least_one_narrative
+        check: at_least_one_present
+        fields: [summary, actionPlan]
+        after: trim
+        error_code: SCA-002
+        message: "Pelo menos um dos campos 'resumo' ou 'plano de ação' deve ser preenchido"
+
+      - id: sca_summary_max_length
+        check: max_length
+        field: summary
+        value: 500
+        error_code: SCA-003
+        message: "Resumo não pode exceder 500 caracteres"
+
+      - id: sca_action_plan_max_length
+        check: max_length
+        field: actionPlan
+        value: 2000
+        error_code: SCA-004
+        message: "Plano de ação não pode exceder 2000 caracteres"

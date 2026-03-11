@@ -1,0 +1,136 @@
+# =============================================================================
+# Custom Validators — Algoritmos nativos por plataforma
+# =============================================================================
+# Cada plataforma (Swift, Dart, TS, etc.) implementa estes validadores como
+# funções nativas. O nome é referenciado nos YAMLs de regras via `custom: <nome>`.
+# =============================================================================
+
+validators:
+
+  # ---------------------------------------------------------------------------
+  # CPF Checksum (Cadastro de Pessoa Física)
+  # ---------------------------------------------------------------------------
+  cpf_checksum:
+    description: |
+      Valida os dois dígitos verificadores do CPF usando soma ponderada.
+      Input: string com exatamente 11 dígitos (já sanitizada).
+    algorithm: |
+      1. Rejeitar se todos os 11 dígitos são iguais (ex: "11111111111")
+      2. Primeiro dígito verificador (posição 9):
+         - Pegar dígitos nas posições 0..8
+         - Multiplicar cada um pelos pesos [10, 9, 8, 7, 6, 5, 4, 3, 2]
+         - Somar tudo
+         - remainder = soma % 11
+         - Se remainder < 2 → dígito = 0
+         - Senão → dígito = 11 - remainder
+      3. Segundo dígito verificador (posição 10):
+         - Pegar dígitos nas posições 0..9 (inclui o primeiro verificador)
+         - Multiplicar pelos pesos [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]
+         - Mesma lógica: remainder = soma % 11 → dígito = (remainder < 2) ? 0 : 11 - remainder
+      4. Comparar dígitos calculados com posições 9 e 10 do input
+
+  # ---------------------------------------------------------------------------
+  # RG Check Digit (Registro Geral)
+  # ---------------------------------------------------------------------------
+  rg_check_digit:
+    description: |
+      Valida dígito verificador do RG.
+      Input: string com 8 dígitos base + 1 dígito verificador (dígito ou "X").
+    algorithm: |
+      1. Base: primeiros 8 dígitos
+      2. Pesos: [2, 3, 4, 5, 6, 7, 8, 9]
+      3. Multiplicar cada dígito pelo peso correspondente e somar
+      4. remainder = soma % 11
+      5. Se remainder == 0 → check digit = "0"
+         Se remainder == 1 → check digit = "X"
+         Senão → check digit = String(11 - remainder)
+      6. Comparar com último caractere do input (case insensitive)
+
+  # ---------------------------------------------------------------------------
+  # CEP State Range (Código de Endereçamento Postal)
+  # ---------------------------------------------------------------------------
+  cep_state_range:
+    description: |
+      Valida se o CEP (8 dígitos) pertence a uma faixa de UF válida.
+      Input: inteiro do CEP sanitizado.
+    ranges:
+      SP: [[1000000, 19999999]]
+      RJ: [[20000000, 28999999]]
+      ES: [[29000000, 29999999]]
+      MG: [[30000000, 39999999]]
+      BA: [[40000000, 48999999]]
+      SE: [[49000000, 49999999]]
+      PE: [[50000000, 56999999]]
+      AL: [[57000000, 57999999]]
+      PB: [[58000000, 58999999]]
+      RN: [[59000000, 59999999]]
+      CE: [[60000000, 63999999]]
+      PI: [[64000000, 64999999]]
+      MA: [[65000000, 65999999]]
+      PA: [[66000000, 68899999]]
+      AP: [[68900000, 68999999]]
+      AM: [[69000000, 69299999], [69400000, 69899999]]
+      RR: [[69300000, 69389999]]
+      AC: [[69900000, 69999999]]
+      DF: [[70000000, 73699999]]
+      GO: [[72800000, 76799999]]
+      TO: [[77000000, 77995999]]
+      MT: [[78000000, 78899999]]
+      RO: [[78900000, 78999999]]
+      MS: [[79000000, 79999999]]
+      PR: [[80000000, 87999999]]
+      SC: [[88000000, 89999999]]
+      RS: [[90000000, 99999999]]
+
+  # ---------------------------------------------------------------------------
+  # Brazilian State Code
+  # ---------------------------------------------------------------------------
+  brazilian_state:
+    description: Valida se é uma UF brasileira válida (sigla de 2 letras).
+    valid_values:
+      - AC
+      - AL
+      - AP
+      - AM
+      - BA
+      - CE
+      - DF
+      - ES
+      - GO
+      - MA
+      - MT
+      - MS
+      - MG
+      - PA
+      - PB
+      - PR
+      - PE
+      - PI
+      - RJ
+      - RN
+      - RS
+      - RO
+      - RR
+      - SC
+      - SP
+      - SE
+      - TO
+
+  # ---------------------------------------------------------------------------
+  # UUID Format
+  # ---------------------------------------------------------------------------
+  uuid_format:
+    description: |
+      Valida formato UUID padrão.
+      Normalize: trim + lowercase.
+      Check: regex ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+
+  # ---------------------------------------------------------------------------
+  # Text Normalization (helper)
+  # ---------------------------------------------------------------------------
+  normalize_text:
+    description: |
+      Normalização padrão aplicada em campos de texto:
+      1. Trim whitespace nas bordas
+      2. Colapsar espaços internos múltiplos em um só (regex \s+ → " ")
+      3. Se resultado for vazio → tratar como nil/null

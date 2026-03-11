@@ -1,0 +1,288 @@
+# =============================================================================
+# Protection — Bounded Context de Proteção e Garantia de Direitos
+# =============================================================================
+# Agregados Referral e RightsViolationReport, entidade PlacementHistory.
+# Referência: social-care/Sources/social-care-s/Domain/Protection/
+# =============================================================================
+
+value_objects:
+
+  # ---------------------------------------------------------------------------
+  # ReferralId
+  # ---------------------------------------------------------------------------
+  ReferralId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: rid_uuid
+        check: custom
+        custom: uuid_format
+        error_code: RI-001
+        message: "ReferralId deve ser um UUID válido"
+    auto_generate: true
+
+  # ---------------------------------------------------------------------------
+  # ViolationReportId
+  # ---------------------------------------------------------------------------
+  ViolationReportId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: vrid_uuid
+        check: custom
+        custom: uuid_format
+        error_code: VRI-001
+        message: "ViolationReportId deve ser um UUID válido"
+    auto_generate: true
+
+  # ---------------------------------------------------------------------------
+  # DestinationService (Serviço de Destino do Encaminhamento)
+  # ---------------------------------------------------------------------------
+  DestinationService:
+    type: enum
+    values:
+      - CRAS
+      - CREAS
+      - HEALTH_CARE
+      - EDUCATION
+      - LEGAL
+      - OTHER
+
+  # ---------------------------------------------------------------------------
+  # ViolationType (Tipo de Violação de Direitos)
+  # ---------------------------------------------------------------------------
+  ViolationType:
+    type: enum
+    values:
+      - NEGLECT
+      - PSYCHOLOGICAL_VIOLENCE
+      - PHYSICAL_VIOLENCE
+      - SEXUAL_ABUSE
+      - SEXUAL_EXPLOITATION
+      - CHILD_LABOR
+      - FINANCIAL_EXPLOITATION
+      - DISCRIMINATION
+      - OTHER
+
+  # ---------------------------------------------------------------------------
+  # Referral.Status (Máquina de Estado do Encaminhamento)
+  # ---------------------------------------------------------------------------
+  ReferralStatus:
+    type: enum
+    values: [PENDING, COMPLETED, CANCELLED]
+    initial: PENDING
+    transitions:
+      PENDING:
+        - COMPLETED
+        - CANCELLED
+      COMPLETED: []    # estado terminal
+      CANCELLED: []    # estado terminal
+
+# =============================================================================
+# ENTIDADES
+# =============================================================================
+
+entities:
+
+  # ---------------------------------------------------------------------------
+  # PlacementHistory (Histórico de Acolhimento)
+  # ---------------------------------------------------------------------------
+  PlacementHistory:
+    type: object
+    fields:
+      familyId:
+        type: PatientId
+        required: true
+
+      individualPlacements:
+        type: array
+        required: true
+        items:
+          type: object
+          name: PlacementRegistry
+          fields:
+            id:
+              type: string         # UUID auto-gerado
+              auto_generate: true
+
+            memberId:
+              type: PersonId
+              required: true
+
+            startDate:
+              type: TimeStamp
+              required: true
+
+            endDate:
+              type: TimeStamp
+              required: false
+
+            reason:
+              type: string
+              required: true
+
+          rules:
+            - id: plc_end_after_start
+              check: |
+                Se endDate for informado, endDate >= startDate
+              error_code: PLC-001
+              message: "Data de término não pode ser anterior à data de início"
+
+      collectiveSituations:
+        type: object
+        name: CollectiveSituations
+        fields:
+          homeLossReport:
+            type: string
+            required: false
+            description: "Relato de perda de moradia"
+
+          thirdPartyGuardReport:
+            type: string
+            required: false
+            description: |
+              Relato de guarda por terceiro.
+              ATENÇÃO: Se preenchido, o agregado Patient DEVE ter pelo menos
+              um membro de 0-17 anos (ver cross-validations.yaml → pat_guardianship_requires_minor)
+
+      separationChecklist:
+        type: object
+        name: SeparationChecklist
+        fields:
+          adultInPrison:
+            type: boolean
+            required: true
+
+          adolescentInInternment:
+            type: boolean
+            required: true
+            description: |
+              ATENÇÃO: Se true, o agregado Patient DEVE ter pelo menos
+              um membro de 12-17 anos (ver cross-validations.yaml → pat_adolescent_internment_requires_12_17)
+
+# =============================================================================
+# AGREGADOS
+# =============================================================================
+
+aggregates:
+
+  # ---------------------------------------------------------------------------
+  # Referral (Encaminhamento)
+  # ---------------------------------------------------------------------------
+  Referral:
+    identity: ReferralId
+    equality: id_only  # igualdade baseada apenas no ID
+
+    fields:
+      id:
+        type: ReferralId
+        required: true
+
+      date:
+        type: TimeStamp
+        required: true
+
+      requestingProfessionalId:
+        type: ProfessionalId
+        required: true
+
+      referredPersonId:
+        type: PersonId
+        required: true
+        description: "DEVE pertencer ao boundary do Patient (ver registry.yaml → pat_referral_target_in_boundary)"
+
+      destinationService:
+        type: DestinationService
+        required: true
+
+      reason:
+        type: string
+        required: true
+        normalize: [trim]
+
+      status:
+        type: ReferralStatus
+        required: true
+        default: PENDING
+
+    rules:
+      - id: ref_date_not_future
+        check: not_future
+        field: date
+        error_code: REF-001
+        message: "Data do encaminhamento não pode ser no futuro"
+
+      - id: ref_reason_not_empty
+        check: not_empty
+        field: reason
+        error_code: REF-002
+        message: "Motivo do encaminhamento não pode ser vazio"
+
+      - id: ref_invalid_transition
+        check: state_machine
+        field: status
+        transitions: ReferralStatus.transitions
+        error_code: REF-003
+        message: "Transição de status inválida. Só é possível alterar status a partir de PENDING"
+
+  # ---------------------------------------------------------------------------
+  # RightsViolationReport (Notificação de Violação de Direitos)
+  # ---------------------------------------------------------------------------
+  RightsViolationReport:
+    identity: ViolationReportId
+    equality: id_only
+
+    fields:
+      id:
+        type: ViolationReportId
+        required: true
+
+      reportDate:
+        type: TimeStamp
+        required: true
+
+      incidentDate:
+        type: TimeStamp
+        required: false
+
+      victimId:
+        type: PersonId
+        required: true
+        description: "DEVE pertencer ao boundary do Patient (ver registry.yaml → pat_violation_target_in_boundary)"
+
+      violationType:
+        type: ViolationType
+        required: true
+
+      descriptionOfFact:
+        type: string
+        required: true
+        normalize: [trim]
+
+      actionsTaken:
+        type: string
+        required: false
+        normalize: [trim]
+
+    rules:
+      - id: rvr_report_date_not_future
+        check: not_future
+        field: reportDate
+        error_code: RVR-001
+        message: "Data da notificação não pode ser no futuro"
+
+      - id: rvr_incident_before_report
+        check: |
+          Se incidentDate for informado, incidentDate <= reportDate
+        error_code: RVR-002
+        message: "Data do incidente não pode ser posterior à data da notificação"
+
+      - id: rvr_description_not_empty
+        check: not_empty
+        field: descriptionOfFact
+        error_code: RVR-003
+        message: "Descrição do fato não pode ser vazia"

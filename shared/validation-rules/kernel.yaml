@@ -1,0 +1,338 @@
+# =============================================================================
+# Kernel — Value Objects cross-cutting
+# =============================================================================
+# VOs compartilhados entre todos os bounded contexts.
+# Referência: social-care/Sources/social-care-s/Domain/Kernel/
+# =============================================================================
+
+value_objects:
+
+  # ---------------------------------------------------------------------------
+  # CPF (Cadastro de Pessoa Física)
+  # ---------------------------------------------------------------------------
+  CPF:
+    type: string
+    normalize:
+      - trim
+      - remove_chars: ".- "        # remove pontos, hífens e espaços
+      - keep_only: digits           # filtra apenas dígitos
+    format_output: "XXX.XXX.XXX-XX"
+    rules:
+      - id: cpf_not_empty
+        check: not_empty
+        error_code: CPF-001
+        message: "CPF não pode ser vazio"
+
+      - id: cpf_allowed_chars
+        check: matches_charset
+        charset: "digits, whitespace, dots, hyphens"
+        error_code: CPF-002
+        message: "CPF contém caracteres inválidos"
+
+      - id: cpf_exact_length
+        check: length_equals
+        length: 11
+        after: sanitization
+        error_code: CPF-003
+        message: "CPF deve conter exatamente 11 dígitos"
+
+      - id: cpf_no_repeated_digits
+        check: not_all_same_chars
+        error_code: CPF-004
+        message: "CPF não pode ter todos os dígitos iguais"
+
+      - id: cpf_checksum
+        check: custom
+        custom: cpf_checksum
+        error_code: CPF-005
+        message: "Dígitos verificadores do CPF são inválidos"
+
+    derived:
+      fiscal_region:
+        description: "UF fiscal derivada do dígito na posição 8"
+        mapping:
+          "0": "RS"
+          "1": "DF, GO, MS, MT, TO"
+          "2": "AC, AM, AP, PA, RO, RR"
+          "3": "CE, MA, PI"
+          "4": "AL, PB, PE, RN"
+          "5": "BA, SE"
+          "6": "MG"
+          "7": "ES, RJ"
+          "8": "SP"
+          "9": "PR, SC"
+
+  # ---------------------------------------------------------------------------
+  # NIS (Número de Identificação Social)
+  # ---------------------------------------------------------------------------
+  NIS:
+    type: string
+    normalize:
+      - trim
+      - keep_only: digits
+    rules:
+      - id: nis_not_empty
+        check: not_empty
+        error_code: NIS-001
+        message: "NIS não pode ser vazio"
+
+      - id: nis_exact_length
+        check: length_equals
+        length: 11
+        after: sanitization
+        error_code: NIS-002
+        message: "NIS deve conter exatamente 11 dígitos"
+
+  # ---------------------------------------------------------------------------
+  # CEP (Código de Endereçamento Postal)
+  # ---------------------------------------------------------------------------
+  CEP:
+    type: string
+    normalize:
+      - trim
+      - remove_chars: "- "
+      - keep_only: digits
+    format_output: "XXXXX-XXX"
+    rules:
+      - id: cep_not_empty
+        check: not_empty
+        error_code: CEP-001
+        message: "CEP não pode ser vazio"
+
+      - id: cep_allowed_chars
+        check: matches_charset
+        charset: "digits, whitespace, hyphens"
+        error_code: CEP-002
+        message: "CEP contém caracteres inválidos"
+
+      - id: cep_exact_length
+        check: length_equals
+        length: 8
+        after: sanitization
+        error_code: CEP-003
+        message: "CEP deve conter exatamente 8 dígitos"
+
+      - id: cep_valid_range
+        check: custom
+        custom: cep_state_range
+        error_code: CEP-004
+        message: "CEP não pertence a nenhuma faixa de UF brasileira válida"
+
+    derived:
+      distribution_kind:
+        description: "Tipo de distribuição baseado no sufixo (últimos 3 dígitos)"
+        mapping:
+          "000-899": STREET_RANGE
+          "900-959": SPECIAL_CODES
+          "960-969": PROMOTIONAL
+          "970-989,999": POST_OFFICE_UNITS
+          other: OTHER
+
+  # ---------------------------------------------------------------------------
+  # PersonId
+  # ---------------------------------------------------------------------------
+  PersonId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: person_id_uuid
+        check: custom
+        custom: uuid_format
+        error_code: PID-001
+        message: "PersonId deve ser um UUID válido"
+    auto_generate: true  # pode ser gerado automaticamente (UUID v4)
+
+  # ---------------------------------------------------------------------------
+  # ProfessionalId
+  # ---------------------------------------------------------------------------
+  ProfessionalId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: professional_id_uuid
+        check: custom
+        custom: uuid_format
+        error_code: PRID-001
+        message: "ProfessionalId deve ser um UUID válido"
+    auto_generate: true
+
+  # ---------------------------------------------------------------------------
+  # LookupId
+  # ---------------------------------------------------------------------------
+  LookupId:
+    type: string
+    normalize:
+      - trim
+      - lowercase
+    rules:
+      - id: lookup_id_uuid
+        check: custom
+        custom: uuid_format
+        error_code: LID-001
+        message: "LookupId deve ser um UUID válido"
+    external_validation:
+      description: |
+        Requer validação de existência contra tabela de domínio via
+        LookupValidating.exists(id:in:). No BFF offline, manter cache
+        local das lookup tables sincronizado quando online.
+
+  # ---------------------------------------------------------------------------
+  # RGDocument (Registro Geral)
+  # ---------------------------------------------------------------------------
+  RGDocument:
+    type: object
+    fields:
+      number:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - uppercase
+          - remove_chars: ".- "
+        rules:
+          - id: rg_not_empty
+            check: not_empty
+            error_code: RG-001
+            message: "Número do RG não pode ser vazio"
+
+          - id: rg_format
+            check: regex
+            pattern: "^[0-9]{8}[0-9X]$"
+            error_code: RG-002
+            message: "RG deve ter 8 dígitos + 1 dígito verificador (0-9 ou X)"
+
+          - id: rg_check_digit
+            check: custom
+            custom: rg_check_digit
+            error_code: RG-003
+            message: "Dígito verificador do RG é inválido"
+
+      issuingState:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - uppercase
+        rules:
+          - id: rg_state_valid
+            check: custom
+            custom: brazilian_state
+            error_code: RG-004
+            message: "UF emissora do RG é inválida"
+
+      issuingAgency:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - collapse_whitespace
+          - uppercase
+        rules:
+          - id: rg_agency_not_empty
+            check: not_empty
+            error_code: RG-005
+            message: "Órgão emissor do RG não pode ser vazio"
+
+      issueDate:
+        type: date
+        required: true
+        rules:
+          - id: rg_date_not_future
+            check: not_future
+            error_code: RG-006
+            message: "Data de emissão do RG não pode ser no futuro"
+
+    format_output: "XXXXXXXX-X"  # 8 dígitos + hífen + check digit
+
+  # ---------------------------------------------------------------------------
+  # Address (Endereço)
+  # ---------------------------------------------------------------------------
+  Address:
+    type: object
+    fields:
+      cep:
+        type: CEP              # referencia o VO CEP acima
+        required: false
+        error_code: ADDR-001
+        message: "CEP inválido"
+
+      state:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - uppercase
+        rules:
+          - id: addr_state_not_empty
+            check: not_empty
+            error_code: ADDR-002
+            message: "UF é obrigatória"
+
+          - id: addr_state_valid
+            check: custom
+            custom: brazilian_state
+            error_code: ADDR-003
+            message: "UF inválida"
+
+      city:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - collapse_whitespace
+        rules:
+          - id: addr_city_not_empty
+            check: not_empty
+            error_code: ADDR-004
+            message: "Cidade é obrigatória"
+
+      street:
+        type: string
+        required: false
+        normalize: [trim, collapse_whitespace]
+
+      neighborhood:
+        type: string
+        required: false
+        normalize: [trim, collapse_whitespace]
+
+      number:
+        type: string
+        required: false
+        normalize: [trim, collapse_whitespace]
+
+      complement:
+        type: string
+        required: false
+        normalize: [trim, collapse_whitespace]
+
+      residenceLocation:
+        type: enum
+        required: true
+        values: [URBANO, RURAL]
+
+      isShelter:
+        type: boolean
+        required: true
+        description: "Indica se é unidade de acolhimento/abrigo"
+
+  # ---------------------------------------------------------------------------
+  # TimeStamp
+  # ---------------------------------------------------------------------------
+  TimeStamp:
+    type: datetime
+    format: "yyyy-MM-dd'T'HH:mm:ss.SSSZ"  # ISO8601 com milissegundos
+    timezone: UTC
+    rules:
+      - id: ts_not_null
+        check: not_null
+        error_code: TS-001
+        message: "Data/hora não pode ser nula"
+    methods:
+      isSameDay: "Compara dia civil em UTC"
+      years_at: "Calcula idade em anos completos na data de referência"
+      toISOString: "Formata com fração de segundo"
