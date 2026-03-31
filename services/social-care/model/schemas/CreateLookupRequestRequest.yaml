@@ -1,0 +1,41 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CreateLookupRequestRequest
+description: Request body for a social worker to request a new item be added to a lookup table.
+type: object
+additionalProperties: false
+required:
+  - tableName
+  - codigo
+  - descricao
+  - justificativa
+properties:
+  tableName:
+    type: string
+    description: Target lookup table name.
+    enum:
+      - dominio_tipo_identidade
+      - dominio_parentesco
+      - dominio_condicao_ocupacao
+      - dominio_escolaridade
+      - dominio_efeito_condicionalidade
+      - dominio_tipo_deficiencia
+      - dominio_programa_social
+      - dominio_tipo_ingresso
+      - dominio_tipo_beneficio
+      - dominio_tipo_violacao
+      - dominio_servico_vinculo
+      - dominio_tipo_medida
+      - dominio_unidade_realizacao
+  codigo:
+    type: string
+    minLength: 1
+    pattern: ^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$
+    description: Proposed item code in UPPER_SNAKE_CASE format.
+  descricao:
+    type: string
+    minLength: 1
+    description: Proposed human-readable description.
+  justificativa:
+    type: string
+    minLength: 1
+    description: Justification for why this new item is needed.

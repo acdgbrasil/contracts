@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RejectLookupRequestRequest
+description: Request body for an admin to reject a lookup item request.
+type: object
+additionalProperties: false
+required:
+  - reviewNote
+properties:
+  reviewNote:
+    type: string
+    minLength: 1
+    description: Reason for rejecting the request.

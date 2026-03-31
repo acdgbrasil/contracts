@@ -1,0 +1,36 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientSummaryResponse
+description: Lightweight patient projection for listing endpoints.
+type: object
+additionalProperties: false
+required:
+  - patientId
+  - personId
+  - memberCount
+properties:
+  patientId:
+    $ref: ./Uuid.yaml
+    description: Unique patient identifier.
+  personId:
+    $ref: ./Uuid.yaml
+    description: Global person identifier.
+  firstName:
+    type: string
+    nullable: true
+    description: Patient first name. Null if personalData was not provided during registration.
+  lastName:
+    type: string
+    nullable: true
+    description: Patient last name. Null if personalData was not provided during registration.
+  fullName:
+    type: string
+    nullable: true
+    description: "Concatenation of firstName + lastName. Null if both are null."
+  primaryDiagnosis:
+    type: string
+    nullable: true
+    description: Description of the first diagnosis. Null if none registered.
+  memberCount:
+    type: integer
+    minimum: 0
+    description: Number of family members associated with this patient.

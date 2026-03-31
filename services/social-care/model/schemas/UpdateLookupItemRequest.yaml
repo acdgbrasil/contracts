@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateLookupItemRequest
+description: Request body for updating the description of a lookup table item. Admin only.
+type: object
+additionalProperties: false
+required:
+  - descricao
+properties:
+  descricao:
+    type: string
+    minLength: 1
+    description: New human-readable description for the item.

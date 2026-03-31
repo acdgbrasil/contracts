@@ -1,0 +1,30 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CreateLookupItemRequest
+description: Request body for creating a new item in a domain lookup table. Admin only.
+type: object
+additionalProperties: false
+required:
+  - codigo
+  - descricao
+properties:
+  codigo:
+    type: string
+    minLength: 1
+    pattern: ^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$
+    description: Unique item code in UPPER_SNAKE_CASE format.
+  descricao:
+    type: string
+    minLength: 1
+    description: Human-readable description of the item.
+  exigeRegistroNascimento:
+    type: boolean
+    nullable: true
+    description: "Only for dominio_tipo_beneficio: requires birth certificate number."
+  exigeCpfFalecido:
+    type: boolean
+    nullable: true
+    description: "Only for dominio_tipo_beneficio: requires deceased CPF."
+  exigeDescricao:
+    type: boolean
+    nullable: true
+    description: "Only for dominio_tipo_violacao: requires detailed description."

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Social Care Sync Contract
-  version: 2.0.0
+  version: 3.0.0
   description: |
     Synchronous APIs for the social-care service.
     All mutation endpoints require the X-Actor-Id header.
@@ -26,6 +26,8 @@ tags:
     description: Domain lookup tables (dominios).
   - name: Audit
     description: Audit trail queries.
+  - name: Configuration
+    description: Lookup table administration and item request governance.
 security:
   - bearerAuth: []
 
@@ -76,6 +78,47 @@ paths:
   # ──────────────────────────── Registry ────────────────────────────
 
   /patients:
+    get:
+      operationId: listPatients
+      summary: List patients (paginated)
+      description: |
+        Returns a paginated list of patients with lightweight summary data.
+        Supports cursor-based pagination and server-side search by firstName, lastName, or CPF.
+      tags:
+        - Registry
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Filter by firstName, lastName, or CPF (case-insensitive, partial match).
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          description: UUID of the last item from the previous page. Omit for first page.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page (1-100, default 20).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated patient list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPatientListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
     post:
       operationId: registerPatient
       summary: Register patient
@@ -691,6 +734,228 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+    post:
+      operationId: createLookupItem
+      summary: Create lookup item (admin)
+      description: Creates a new item in a domain lookup table. Admin role required.
+      tags:
+        - Configuration
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          description: Name of the domain lookup table.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLookupItemRequest'
+      responses:
+        '201':
+          description: Lookup item created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /dominios/{tableName}/{itemId}:
+    put:
+      operationId: updateLookupItem
+      summary: Update lookup item description (admin)
+      description: Updates the description of an existing lookup table item. Admin role required.
+      tags:
+        - Configuration
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          description: Lookup item identifier (UUID).
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLookupItemRequest'
+      responses:
+        '204':
+          description: Lookup item updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /dominios/{tableName}/{itemId}/toggle:
+    patch:
+      operationId: toggleLookupItem
+      summary: Activate/deactivate lookup item (admin)
+      description: |
+        Toggles the active flag of a lookup item. Deactivated items are hidden from
+        lookup queries but preserved for referential integrity. Cannot deactivate items
+        that are referenced by patient records.
+      tags:
+        - Configuration
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Lookup item toggled.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Configuration (Lookup Requests) ────────────────────────────
+
+  /dominios/requests:
+    post:
+      operationId: createLookupRequest
+      summary: Request a new lookup item
+      description: |
+        Social workers can request new items to be added to lookup tables.
+        The request enters a governance queue for admin approval.
+      tags:
+        - Configuration
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLookupRequestRequest'
+      responses:
+        '201':
+          description: Lookup request created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listLookupRequests
+      summary: List lookup requests
+      description: |
+        Admins see all requests. Social workers see only their own.
+        Filterable by status (pendente, aprovado, rejeitado).
+      tags:
+        - Configuration
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by review status.
+          schema:
+            type: string
+            enum:
+              - pendente
+              - aprovado
+              - rejeitado
+      responses:
+        '200':
+          description: Lookup requests listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardLookupRequestListResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /dominios/requests/{requestId}/approve:
+    put:
+      operationId: approveLookupRequest
+      summary: Approve lookup request (admin)
+      description: |
+        Approves a pending request and automatically creates the item in the target
+        lookup table. Fails if the request was already reviewed or the code already exists.
+      tags:
+        - Configuration
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Request identifier (UUID).
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Request approved and item created.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /dominios/requests/{requestId}/reject:
+    put:
+      operationId: rejectLookupRequest
+      summary: Reject lookup request (admin)
+      description: Rejects a pending request with a mandatory review note explaining the reason.
+      tags:
+        - Configuration
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: Request identifier (UUID).
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectLookupRequestRequest'
+      responses:
+        '204':
+          description: Request rejected.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   securitySchemes:
@@ -751,6 +1016,10 @@ components:
       $ref: ../model/schemas/LookupItemResponse.yaml
     AuditTrailEntryResponse:
       $ref: ../model/schemas/AuditTrailEntryResponse.yaml
+    PatientSummaryResponse:
+      $ref: ../model/schemas/PatientSummaryResponse.yaml
+    LookupRequestResponse:
+      $ref: ../model/schemas/LookupRequestResponse.yaml
     ErrorResponse:
       $ref: ../model/schemas/ErrorResponse.yaml
 
@@ -831,6 +1100,61 @@ components:
             timestamp:
               $ref: '#/components/schemas/IsoDateTime'
 
+    PaginatedPatientListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PatientSummaryResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required:
+            - timestamp
+            - pageSize
+            - totalCount
+            - hasMore
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+            pageSize:
+              type: integer
+              minimum: 1
+              maximum: 100
+            totalCount:
+              type: integer
+              minimum: 0
+            hasMore:
+              type: boolean
+            nextCursor:
+              $ref: '#/components/schemas/Uuid'
+              nullable: true
+
+    StandardLookupRequestListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LookupRequestResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required:
+            - timestamp
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
     # Request schemas
     RegisterPatientRequest:
       $ref: ../model/schemas/RegisterPatientRequest.yaml
@@ -864,6 +1188,14 @@ components:
       $ref: ../model/schemas/UpdateCommunitySupportNetworkRequest.yaml
     UpdateSocialHealthSummaryRequest:
       $ref: ../model/schemas/UpdateSocialHealthSummaryRequest.yaml
+    CreateLookupItemRequest:
+      $ref: ../model/schemas/CreateLookupItemRequest.yaml
+    UpdateLookupItemRequest:
+      $ref: ../model/schemas/UpdateLookupItemRequest.yaml
+    CreateLookupRequestRequest:
+      $ref: ../model/schemas/CreateLookupRequestRequest.yaml
+    RejectLookupRequestRequest:
+      $ref: ../model/schemas/RejectLookupRequestRequest.yaml
 
   responses:
     BadRequest:

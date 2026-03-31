@@ -1,0 +1,55 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: LookupRequestResponse
+description: A lookup item request with its review status.
+type: object
+additionalProperties: false
+required:
+  - id
+  - tableName
+  - codigo
+  - descricao
+  - justificativa
+  - status
+  - requestedBy
+  - requestedAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+    description: Request identifier.
+  tableName:
+    type: string
+    description: Target lookup table name.
+  codigo:
+    type: string
+    description: Proposed item code (UPPER_SNAKE_CASE).
+  descricao:
+    type: string
+    description: Proposed item description.
+  justificativa:
+    type: string
+    description: Justification provided by the requester.
+  status:
+    type: string
+    enum:
+      - pendente
+      - aprovado
+      - rejeitado
+    description: Current review status.
+  requestedBy:
+    type: string
+    description: User ID of the requester.
+  requestedAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp of when the request was created.
+  reviewedBy:
+    type: string
+    nullable: true
+    description: User ID of the admin who reviewed. Null if still pending.
+  reviewedAt:
+    $ref: ./IsoDateTime.yaml
+    nullable: true
+    description: Timestamp of the review. Null if still pending.
+  reviewNote:
+    type: string
+    nullable: true
+    description: Admin review note (required on rejection). Null if approved or pending.
