@@ -1,0 +1,11 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CNSNumber
+type: string
+pattern: ^\d{15}$
+description: |
+  Numero do Cartao Nacional de Saude (CNS / Cartao do SUS).
+  Deve conter exatamente 15 digitos. Primeiro digito define o tipo:
+  - 1 ou 2: definitivo (validacao PIS + digito verificador)
+  - 7, 8 ou 9: provisorio (soma ponderada mod 11 == 0)
+  Digitos 3, 4, 5 e 6 nao sao permitidos como primeiro digito.
+example: "700000000000005"

@@ -78,6 +78,23 @@ properties:
             type: string
           issueDate:
             $ref: ./IsoDate.yaml
+      cns:
+        type: object
+        additionalProperties: false
+        description: Cartao Nacional de Saude (SUS card).
+        required:
+          - number
+          - cpf
+        properties:
+          number:
+            $ref: ./CNSNumber.yaml
+          cpf:
+            type: string
+            pattern: ^\d{11}$
+            description: CPF printed on the SUS card. Must match civilDocuments.cpf when both are provided.
+          qrCode:
+            type: string
+            description: QR code string from the physical SUS card (optional).
   address:
     type: object
     additionalProperties: false
@@ -92,6 +109,10 @@ properties:
         pattern: ^\d{8}$
       isShelter:
         type: boolean
+      isHomeless:
+        type: boolean
+        default: false
+        description: Indicates the person is homeless (situacao de rua). State and city remain required for territorial coverage (CRAS reference).
       residenceLocation:
         type: string
       street:

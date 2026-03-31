@@ -249,6 +249,65 @@ value_objects:
     format_output: "XXXXXXXX-X"  # 8 dígitos + hífen + check digit
 
   # ---------------------------------------------------------------------------
+  # CNS (Cartão Nacional de Saúde / Cartão do SUS)
+  # ---------------------------------------------------------------------------
+  CNS:
+    type: object
+    fields:
+      number:
+        type: string
+        required: true
+        normalize:
+          - trim
+          - keep_only: digits
+        rules:
+          - id: cns_not_empty
+            check: not_empty
+            error_code: CNS-001
+            message: "Número do CNS não pode ser vazio"
+
+          - id: cns_exact_length
+            check: length_equals
+            length: 15
+            after: sanitization
+            error_code: CNS-002
+            message: "CNS deve conter exatamente 15 dígitos"
+
+          - id: cns_first_digit
+            check: custom
+            custom: cns_first_digit
+            error_code: CNS-003
+            message: "Primeiro dígito do CNS deve ser 1, 2, 7, 8 ou 9"
+
+          - id: cns_checksum
+            check: custom
+            custom: cns_checksum
+            error_code: CNS-005
+            message: "Dígito verificador do CNS é inválido"
+
+        format_output: "XXX XXXX XXXX XXXX"
+
+      cpf:
+        type: CPF              # referencia o VO CPF acima
+        required: true
+        description: "CPF impresso no cartão do SUS"
+
+      qrCode:
+        type: string
+        required: false
+        normalize:
+          - trim
+        description: "String do QR Code impresso no cartão físico"
+
+    cross_validation:
+      - id: cns_cpf_must_match_civil_documents_cpf
+        rule: |
+          Quando CivilDocuments.cpf e CNS.cpf são ambos informados,
+          devem ser idênticos (mesmo valor sanitizado).
+        error_code: CVD-002
+        message: "O CPF informado não corresponde ao CPF do Cartão do SUS (CNS)"
+
+  # ---------------------------------------------------------------------------
   # Address (Endereço)
   # ---------------------------------------------------------------------------
   Address:
@@ -319,6 +378,15 @@ value_objects:
         type: boolean
         required: true
         description: "Indica se é unidade de acolhimento/abrigo"
+
+      isHomeless:
+        type: boolean
+        required: false
+        default: false
+        description: |
+          Indica pessoa em situação de rua. Quando true, UF e cidade
+          continuam obrigatórios para cobertura territorial (CRAS de referência).
+          Pode coexistir com isShelter (pessoa em situação de rua em abrigo).
 
   # ---------------------------------------------------------------------------
   # TimeStamp

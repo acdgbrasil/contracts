@@ -64,6 +64,20 @@ properties:
             type: string
           issueDate:
             $ref: ./IsoDate.yaml
+      cns:
+        type: object
+        additionalProperties: false
+        description: Cartao Nacional de Saude (SUS card).
+        properties:
+          number:
+            type: string
+            description: Formatted CNS number (XXX XXXX XXXX XXXX).
+          cpf:
+            type: string
+            description: Formatted CPF from the SUS card (XXX.XXX.XXX-XX).
+          qrCode:
+            type: string
+            description: QR code string from the physical SUS card.
   address:
     type: object
     additionalProperties: false
@@ -73,6 +87,9 @@ properties:
         pattern: ^\d{8}$
       isShelter:
         type: boolean
+      isHomeless:
+        type: boolean
+        description: Indicates the person is homeless (situacao de rua).
       residenceLocation:
         type: string
       street:
