@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CarePlanResponse
+description: Care plan for a person's daily visit, listing specialties and their service orders.
+type: object
+additionalProperties: false
+required:
+  - personId
+  - visitId
+  - specialties
+properties:
+  personId:
+    $ref: ./Uuid.yaml
+  visitId:
+    $ref: ./Uuid.yaml
+  specialties:
+    type: array
+    items:
+      $ref: ./CarePlanSpecialtyItem.yaml

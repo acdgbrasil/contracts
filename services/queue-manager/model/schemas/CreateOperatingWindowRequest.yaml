@@ -1,0 +1,24 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CreateOperatingWindowRequest
+description: Defines an operating window for a specialty on a given day of the week.
+type: object
+additionalProperties: false
+required:
+  - specialtyId
+  - dayOfWeek
+  - openTime
+  - closeTime
+properties:
+  specialtyId:
+    $ref: ./Uuid.yaml
+  dayOfWeek:
+    type: integer
+    minimum: 0
+    maximum: 6
+    description: "Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday."
+  openTime:
+    type: string
+    pattern: ^([01]\d|2[0-3]):[0-5]\d$
+  closeTime:
+    type: string
+    pattern: ^([01]\d|2[0-3]):[0-5]\d$

@@ -1,0 +1,29 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CancellationApprovedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: ID of the actor who triggered this event.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - serviceOrderId
+      - personId
+      - approvedBy
+    properties:
+      serviceOrderId:
+        $ref: ./Uuid.yaml
+      personId:
+        $ref: ./Uuid.yaml
+      approvedBy:
+        $ref: ./Uuid.yaml
+        description: Actor ID of the social worker who approved the cancellation.

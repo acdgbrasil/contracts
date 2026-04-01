@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: DailyVisitStatus
+type: string
+enum:
+  - InProgress
+  - Completed
+  - ClosedByDay
+description: |
+  Status of a daily visit:
+  InProgress: visit is active, patient is at the unit.
+  Completed: all service orders reached a final state.
+  ClosedByDay: day ended with pending service orders (triggers carry-over).

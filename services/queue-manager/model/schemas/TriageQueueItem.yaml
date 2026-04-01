@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: TriageQueueItem
+description: An item in the triage queue (unauthenticated arrivals).
+type: object
+additionalProperties: false
+required:
+  - personId
+  - position
+  - arrivedAt
+properties:
+  personId:
+    $ref: ./Uuid.yaml
+  position:
+    type: integer
+    minimum: 1
+  arrivedAt:
+    $ref: ./IsoDateTime.yaml

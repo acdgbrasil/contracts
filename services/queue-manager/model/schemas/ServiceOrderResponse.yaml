@@ -1,0 +1,40 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ServiceOrderResponse
+description: Full service order projection.
+type: object
+additionalProperties: false
+required:
+  - id
+  - visitId
+  - personId
+  - specialtyId
+  - specialtyName
+  - status
+  - priority
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  visitId:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  status:
+    $ref: ./ServiceOrderStatus.yaml
+  priority:
+    $ref: ./ServiceOrderPriority.yaml
+  professionalId:
+    $ref: ./Uuid.yaml
+    description: Assigned professional (null if not yet called).
+  proofOfCareId:
+    $ref: ./Uuid.yaml
+    description: Proof of care attachment ID (null if not yet attached).
+  createdAt:
+    $ref: ./IsoDateTime.yaml
+  updatedAt:
+    $ref: ./IsoDateTime.yaml

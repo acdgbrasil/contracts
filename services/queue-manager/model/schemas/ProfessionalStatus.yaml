@@ -1,0 +1,7 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ProfessionalStatus
+type: string
+enum:
+  - Available
+  - Busy
+description: Current availability of a professional within the queue system.

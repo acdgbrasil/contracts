@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AssociateProfessionalRequest
+description: Associates a person as a professional for a given specialty.
+type: object
+additionalProperties: false
+required:
+  - personId
+  - name
+  - specialtyId
+properties:
+  personId:
+    $ref: ./Uuid.yaml
+  name:
+    type: string
+    minLength: 1
+  specialtyId:
+    $ref: ./Uuid.yaml

@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ConcludeTriageRequest
+description: |
+  Concludes triage for a person, creating a care plan with one service order per specialty.
+  The person must be currently in the triage queue.
+type: object
+additionalProperties: false
+required:
+  - personId
+  - specialtyIds
+properties:
+  personId:
+    $ref: ./Uuid.yaml
+  specialtyIds:
+    type: array
+    minItems: 1
+    items:
+      $ref: ./Uuid.yaml
+    description: IDs of the specialties the person should be seen for today.

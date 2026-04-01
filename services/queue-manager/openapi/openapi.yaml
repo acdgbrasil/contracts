@@ -1,0 +1,1323 @@
+openapi: 3.1.0
+info:
+  title: Queue Manager Sync Contract
+  version: 1.0.0
+  description: |
+    Synchronous APIs for the queue-manager service.
+    All mutation endpoints require the X-Actor-Id header.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://queue-manager.acdgbrasil.com.br/api/v1
+    description: Production
+tags:
+  - name: Health
+    description: Infrastructure health probes.
+  - name: Triage
+    description: Triage queue operations (arrival, conclude, care plan).
+  - name: Queues
+    description: Specialty queues and service order management.
+  - name: Attendance
+    description: Professional workflow (open queue, call next, attend, complete).
+  - name: Panels
+    description: Read-only panels for public display, patients, professionals, and management.
+  - name: Admin
+    description: Specialty CRUD, professional assignment, and operating windows.
+  - name: Audit
+    description: Audit trail queries.
+security:
+  - bearerAuth: []
+
+paths:
+  # ──────────────────────────── Health ────────────────────────────
+
+  /health:
+    servers:
+      - url: https://queue-manager.acdgbrasil.com.br
+    get:
+      operationId: liveness
+      summary: Liveness check
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Service is alive.
+        '404':
+          description: Endpoint not found.
+
+  /ready:
+    servers:
+      - url: https://queue-manager.acdgbrasil.com.br
+    get:
+      operationId: readiness
+      summary: Readiness check
+      description: Verifies database connectivity.
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Service is unavailable (database unreachable).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+
+  # ──────────────────────────── Triage ────────────────────────────
+
+  /triage/arrivals:
+    post:
+      operationId: registerArrival
+      summary: Register arrival
+      description: Registers a person's arrival, creating a daily visit and entering the triage queue.
+      tags: [Triage]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterArrivalRequest'
+      responses:
+        '201':
+          description: Arrival registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /triage/queue:
+    get:
+      operationId: listTriageQueue
+      summary: List triage queue
+      description: Returns the current triage queue in FIFO order.
+      tags: [Triage]
+      responses:
+        '200':
+          description: Triage queue listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardTriageQueueResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /triage/conclusions:
+    post:
+      operationId: concludeTriage
+      summary: Conclude triage
+      description: |
+        Concludes triage for a person, creating a care plan with one service order per specialty.
+        The person must currently be in the triage queue.
+      tags: [Triage]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConcludeTriageRequest'
+      responses:
+        '201':
+          description: Triage concluded, care plan created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardCarePlanResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /triage/care-plans/{personId}:
+    get:
+      operationId: getCarePlan
+      summary: Get care plan
+      description: Returns the care plan for a person's current daily visit.
+      tags: [Triage]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: Care plan found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardCarePlanResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Queues ────────────────────────────
+
+  /queues/specialties/{specialtyId}:
+    get:
+      operationId: listSpecialtyQueue
+      summary: List specialty queue
+      description: Returns the current queue for a specialty with items in priority+FIFO order.
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/SpecialtyId'
+      responses:
+        '200':
+          description: Specialty queue listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSpecialtyQueueResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /service-orders/{serviceOrderId}:
+    get:
+      operationId: getServiceOrder
+      summary: Get service order
+      description: Returns the full service order projection.
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/ServiceOrderId'
+      responses:
+        '200':
+          description: Service order found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardServiceOrderResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /daily-visits/{visitId}:
+    get:
+      operationId: getDailyVisit
+      summary: Get daily visit
+      description: Returns a daily visit with all its service orders.
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+      responses:
+        '200':
+          description: Daily visit found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardDailyVisitResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /daily-visits:
+    get:
+      operationId: listDailyVisits
+      summary: List daily visits
+      description: Returns a paginated list of daily visits, filtered by date (defaults to today).
+      tags: [Queues]
+      parameters:
+        - name: date
+          in: query
+          required: false
+          description: Filter by date (defaults to today).
+          schema:
+            $ref: '#/components/schemas/IsoDate'
+        - name: cursor
+          in: query
+          required: false
+          description: UUID of the last item from the previous page.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page (1-100, default 20).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated daily visits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDailyVisitListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /service-orders/{serviceOrderId}/cancellation:
+    post:
+      operationId: requestCancellation
+      summary: Request cancellation
+      description: |
+        Requests cancellation of a service order. The order enters CancellationPending state
+        and requires social worker approval (R4).
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/ServiceOrderId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestCancellationRequest'
+      responses:
+        '202':
+          description: Cancellation request accepted, pending approval.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /service-orders/{serviceOrderId}/cancellation/approval:
+    put:
+      operationId: approveCancellation
+      summary: Approve cancellation
+      description: Social worker approves a pending cancellation, marking it as a justified absence.
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/ServiceOrderId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveCancellationRequest'
+      responses:
+        '204':
+          description: Cancellation approved.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /service-orders/{serviceOrderId}/no-show:
+    post:
+      operationId: registerNoShow
+      summary: Register no-show
+      description: Registers a no-show for a called service order (unjustified absence).
+      tags: [Queues]
+      parameters:
+        - $ref: '#/components/parameters/ServiceOrderId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterNoShowRequest'
+      responses:
+        '204':
+          description: No-show registered.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Attendance ────────────────────────────
+
+  /attendance/open-queue:
+    post:
+      operationId: openQueue
+      summary: Open queue
+      description: Professional opens their specialty queue for receiving patients. Professional inferred from JWT.
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Queue opened.
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /attendance/call-next:
+    post:
+      operationId: callNext
+      summary: Call next patient
+      description: |
+        Atomically reserves the next eligible service order from the professional's specialty queue (R7).
+        Returns the reserved service order, or 204 if the queue is empty.
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '200':
+          description: Next patient called.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardServiceOrderResponse'
+        '204':
+          description: No eligible patients in queue.
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /attendance/register-presence:
+    post:
+      operationId: registerPresence
+      summary: Register presence
+      description: Professional confirms patient showed up. Transitions service order from Called to InProgress.
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPresenceRequest'
+      responses:
+        '204':
+          description: Presence registered.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /attendance/attach-proof:
+    post:
+      operationId: attachProofOfCare
+      summary: Attach proof of care
+      description: Attaches proof of care (signed document) to a service order. Required before completing care (R6).
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachProofOfCareRequest'
+      responses:
+        '204':
+          description: Proof of care attached.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /attendance/complete:
+    post:
+      operationId: completeCare
+      summary: Complete care
+      description: |
+        Completes a service order. Requires proof of care to be attached (R6).
+        Transitions InProgress to Completed.
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteCareRequest'
+      responses:
+        '204':
+          description: Care completed.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /attendance/close-queue:
+    post:
+      operationId: closeQueue
+      summary: Close queue
+      description: Professional closes their specialty queue. No more patients will be called.
+      tags: [Attendance]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Queue closed.
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Panels ────────────────────────────
+
+  /panels/public/{specialtyId}:
+    get:
+      operationId: getPublicSpecialtyPanel
+      summary: Get public specialty panel
+      description: Public panel for a specialty displayed on TV at the unit. No authentication required.
+      tags: [Panels]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/SpecialtyId'
+      responses:
+        '200':
+          description: Public panel data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardPublicPanelResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /panels/patient/{personId}:
+    get:
+      operationId: getPatientPanel
+      summary: Get patient panel
+      description: Patient-facing panel showing queue positions and estimated wait times.
+      tags: [Panels]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: Patient panel data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardPatientPanelResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /panels/professional:
+    get:
+      operationId: getProfessionalPanel
+      summary: Get professional panel
+      description: Professional's dashboard. Professional inferred from JWT.
+      tags: [Panels]
+      responses:
+        '200':
+          description: Professional panel data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardProfessionalPanelResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /panels/management:
+    get:
+      operationId: getManagementDashboard
+      summary: Get management dashboard
+      description: Aggregated daily metrics for management.
+      tags: [Panels]
+      parameters:
+        - name: date
+          in: query
+          required: false
+          description: Date to query (defaults to today).
+          schema:
+            $ref: '#/components/schemas/IsoDate'
+      responses:
+        '200':
+          description: Management dashboard data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardManagementDashboardResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Admin ────────────────────────────
+
+  /admin/specialties:
+    post:
+      operationId: createSpecialty
+      summary: Create specialty
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpecialtyRequest'
+      responses:
+        '201':
+          description: Specialty created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listSpecialties
+      summary: List specialties
+      tags: [Admin]
+      responses:
+        '200':
+          description: Specialties listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSpecialtyListResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/specialties/{specialtyId}:
+    get:
+      operationId: getSpecialty
+      summary: Get specialty
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/SpecialtyId'
+      responses:
+        '200':
+          description: Specialty found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardSpecialtyResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      operationId: updateSpecialty
+      summary: Update specialty
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/SpecialtyId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSpecialtyRequest'
+      responses:
+        '204':
+          description: Specialty updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/professionals:
+    post:
+      operationId: associateProfessional
+      summary: Associate professional
+      description: Associates a person as a professional for a given specialty.
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociateProfessionalRequest'
+      responses:
+        '201':
+          description: Professional associated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listProfessionals
+      summary: List professionals
+      tags: [Admin]
+      parameters:
+        - name: specialtyId
+          in: query
+          required: false
+          description: Filter by specialty.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Professionals listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardProfessionalListResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/professionals/{professionalId}:
+    get:
+      operationId: getProfessional
+      summary: Get professional
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/ProfessionalId'
+      responses:
+        '200':
+          description: Professional found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardProfessionalResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/operating-windows:
+    post:
+      operationId: createOperatingWindow
+      summary: Create operating window
+      description: Defines an operating window for a specialty on a given day of the week.
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOperatingWindowRequest'
+      responses:
+        '201':
+          description: Operating window created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listOperatingWindows
+      summary: List operating windows
+      tags: [Admin]
+      parameters:
+        - name: specialtyId
+          in: query
+          required: false
+          description: Filter by specialty.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+      responses:
+        '200':
+          description: Operating windows listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardOperatingWindowListResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/operating-windows/{windowId}:
+    put:
+      operationId: updateOperatingWindow
+      summary: Update operating window
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/WindowId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOperatingWindowRequest'
+      responses:
+        '204':
+          description: Operating window updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      operationId: removeOperatingWindow
+      summary: Remove operating window
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/WindowId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Operating window removed.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/close-day:
+    post:
+      operationId: closeDay
+      summary: Close day
+      description: |
+        Triggers day-end policies: all Ready service orders become CarryOver,
+        all active visits are closed.
+      tags: [Admin]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Day closed.
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Audit ────────────────────────────
+
+  /daily-visits/{visitId}/audit-trail:
+    get:
+      operationId: getVisitAuditTrail
+      summary: Get visit audit trail
+      description: Returns the event history for a daily visit aggregate.
+      tags: [Audit]
+      parameters:
+        - $ref: '#/components/parameters/VisitId'
+        - name: eventType
+          in: query
+          required: false
+          description: Filter by event type.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit trail entries.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardAuditTrailResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Identifier of the actor performing the operation.
+      schema:
+        type: string
+    SpecialtyId:
+      name: specialtyId
+      in: path
+      required: true
+      description: Specialty identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ServiceOrderId:
+      name: serviceOrderId
+      in: path
+      required: true
+      description: Service order identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    VisitId:
+      name: visitId
+      in: path
+      required: true
+      description: Daily visit identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    PersonId:
+      name: personId
+      in: path
+      required: true
+      description: Person identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ProfessionalId:
+      name: professionalId
+      in: path
+      required: true
+      description: Professional identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    WindowId:
+      name: windowId
+      in: path
+      required: true
+      description: Operating window identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+
+  schemas:
+    # Primitives
+    Uuid:
+      $ref: ../model/schemas/Uuid.yaml
+    IsoDate:
+      $ref: ../model/schemas/IsoDate.yaml
+    IsoDateTime:
+      $ref: ../model/schemas/IsoDateTime.yaml
+
+    # Enums
+    ServiceOrderStatus:
+      $ref: ../model/schemas/ServiceOrderStatus.yaml
+    ServiceOrderPriority:
+      $ref: ../model/schemas/ServiceOrderPriority.yaml
+    ProfessionalStatus:
+      $ref: ../model/schemas/ProfessionalStatus.yaml
+
+    # Infrastructure
+    ReadinessResponse:
+      $ref: ../model/schemas/ReadinessResponse.yaml
+    IdResponse:
+      $ref: ../model/schemas/IdResponse.yaml
+    ErrorResponse:
+      $ref: ../model/schemas/ErrorResponse.yaml
+
+    # Domain responses
+    SpecialtyResponse:
+      $ref: ../model/schemas/SpecialtyResponse.yaml
+    ProfessionalResponse:
+      $ref: ../model/schemas/ProfessionalResponse.yaml
+    OperatingWindowResponse:
+      $ref: ../model/schemas/OperatingWindowResponse.yaml
+    ServiceOrderResponse:
+      $ref: ../model/schemas/ServiceOrderResponse.yaml
+    DailyVisitResponse:
+      $ref: ../model/schemas/DailyVisitResponse.yaml
+    SpecialtyQueueResponse:
+      $ref: ../model/schemas/SpecialtyQueueResponse.yaml
+    TriageQueueResponse:
+      $ref: ../model/schemas/TriageQueueResponse.yaml
+    CarePlanResponse:
+      $ref: ../model/schemas/CarePlanResponse.yaml
+    PublicPanelSpecialtyResponse:
+      $ref: ../model/schemas/PublicPanelSpecialtyResponse.yaml
+    PatientPanelResponse:
+      $ref: ../model/schemas/PatientPanelResponse.yaml
+    ProfessionalPanelResponse:
+      $ref: ../model/schemas/ProfessionalPanelResponse.yaml
+    ManagementDashboardResponse:
+      $ref: ../model/schemas/ManagementDashboardResponse.yaml
+    AuditTrailEntryResponse:
+      $ref: ../model/schemas/AuditTrailEntryResponse.yaml
+
+    # Requests
+    RegisterArrivalRequest:
+      $ref: ../model/schemas/RegisterArrivalRequest.yaml
+    ConcludeTriageRequest:
+      $ref: ../model/schemas/ConcludeTriageRequest.yaml
+    CreateSpecialtyRequest:
+      $ref: ../model/schemas/CreateSpecialtyRequest.yaml
+    UpdateSpecialtyRequest:
+      $ref: ../model/schemas/UpdateSpecialtyRequest.yaml
+    AssociateProfessionalRequest:
+      $ref: ../model/schemas/AssociateProfessionalRequest.yaml
+    CreateOperatingWindowRequest:
+      $ref: ../model/schemas/CreateOperatingWindowRequest.yaml
+    UpdateOperatingWindowRequest:
+      $ref: ../model/schemas/UpdateOperatingWindowRequest.yaml
+    RegisterPresenceRequest:
+      $ref: ../model/schemas/RegisterPresenceRequest.yaml
+    AttachProofOfCareRequest:
+      $ref: ../model/schemas/AttachProofOfCareRequest.yaml
+    RequestCancellationRequest:
+      $ref: ../model/schemas/RequestCancellationRequest.yaml
+    ApproveCancellationRequest:
+      $ref: ../model/schemas/ApproveCancellationRequest.yaml
+    RegisterNoShowRequest:
+      $ref: ../model/schemas/RegisterNoShowRequest.yaml
+    CompleteCareRequest:
+      $ref: ../model/schemas/CompleteCareRequest.yaml
+
+    # Composed response wrappers
+    StandardIdResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/IdResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardTriageQueueResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/TriageQueueResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardCarePlanResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/CarePlanResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardSpecialtyQueueResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/SpecialtyQueueResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardServiceOrderResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ServiceOrderResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardDailyVisitResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/DailyVisitResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    PaginatedDailyVisitListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyVisitResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp, pageSize, totalCount, hasMore]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+            pageSize:
+              type: integer
+              minimum: 1
+              maximum: 100
+            totalCount:
+              type: integer
+              minimum: 0
+            hasMore:
+              type: boolean
+            nextCursor:
+              $ref: '#/components/schemas/Uuid'
+
+    StandardPublicPanelResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/PublicPanelSpecialtyResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardPatientPanelResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/PatientPanelResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardProfessionalPanelResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProfessionalPanelResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardManagementDashboardResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ManagementDashboardResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardSpecialtyResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/SpecialtyResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardSpecialtyListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecialtyResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardProfessionalResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProfessionalResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardProfessionalListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfessionalResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardOperatingWindowListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperatingWindowResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardAuditTrailResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditTrailEntryResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+  responses:
+    BadRequest:
+      description: Invalid input data.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict with current resource state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Target resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Business validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Unexpected server-side failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

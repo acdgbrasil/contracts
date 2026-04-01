@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CompleteCareRequest
+description: Completes a service order. Proof of care must be attached beforehand (R6).
+type: object
+additionalProperties: false
+required:
+  - serviceOrderId
+properties:
+  serviceOrderId:
+    $ref: ./Uuid.yaml

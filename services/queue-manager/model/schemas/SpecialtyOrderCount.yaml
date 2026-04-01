@@ -1,0 +1,25 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SpecialtyOrderCount
+description: Aggregated service order counts for a specialty (management dashboard).
+type: object
+additionalProperties: false
+required:
+  - specialtyId
+  - specialtyName
+  - total
+  - completed
+  - pending
+properties:
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  total:
+    type: integer
+    minimum: 0
+  completed:
+    type: integer
+    minimum: 0
+  pending:
+    type: integer
+    minimum: 0

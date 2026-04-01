@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ServiceOrderStatus
+type: string
+enum:
+  - Created
+  - Ready
+  - Called
+  - InProgress
+  - Completed
+  - CarryOver
+  - CancellationPending
+  - Cancelled
+  - NoShow
+description: |
+  State machine for a service order:
+  Created → Ready → Called → InProgress → Completed.
+  Branches: Ready → CarryOver, Ready → CancellationPending → Cancelled,
+  Called → NoShow.

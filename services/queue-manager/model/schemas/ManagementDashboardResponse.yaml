@@ -1,0 +1,39 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ManagementDashboardResponse
+description: Management dashboard with aggregated daily metrics.
+type: object
+additionalProperties: false
+required:
+  - date
+  - totalVisits
+  - totalServiceOrders
+  - ordersByStatus
+  - ordersBySpecialty
+  - averageWaitMinutes
+  - averageCareMinutes
+properties:
+  date:
+    $ref: ./IsoDate.yaml
+  totalVisits:
+    type: integer
+    minimum: 0
+  totalServiceOrders:
+    type: integer
+    minimum: 0
+  ordersByStatus:
+    type: object
+    additionalProperties:
+      type: integer
+    description: "Map of ServiceOrderStatus → count."
+  ordersBySpecialty:
+    type: array
+    items:
+      $ref: ./SpecialtyOrderCount.yaml
+  averageWaitMinutes:
+    type: number
+    minimum: 0
+    description: Average wait time from Ready to InProgress (minutes).
+  averageCareMinutes:
+    type: number
+    minimum: 0
+    description: Average care duration from InProgress to Completed (minutes).

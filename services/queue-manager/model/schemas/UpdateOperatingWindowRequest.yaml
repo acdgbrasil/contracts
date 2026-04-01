@@ -1,0 +1,14 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdateOperatingWindowRequest
+type: object
+additionalProperties: false
+required:
+  - openTime
+  - closeTime
+properties:
+  openTime:
+    type: string
+    pattern: ^([01]\d|2[0-3]):[0-5]\d$
+  closeTime:
+    type: string
+    pattern: ^([01]\d|2[0-3]):[0-5]\d$

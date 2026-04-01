@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CarePlanSpecialtyItem
+description: A specialty entry within a care plan, linking to its service order.
+type: object
+additionalProperties: false
+required:
+  - specialtyId
+  - specialtyName
+  - serviceOrderId
+  - status
+properties:
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  serviceOrderId:
+    $ref: ./Uuid.yaml
+  status:
+    $ref: ./ServiceOrderStatus.yaml

@@ -1,0 +1,334 @@
+asyncapi: 3.1.0
+info:
+  title: Queue Manager Async Contract
+  version: 1.0.0
+  description: |
+    Asynchronous event contracts for the queue-manager service.
+    Events are published via Transactional Outbox pattern and relayed to NATS.
+    All events carry metadata (eventId, occurredAt, schemaVersion) and an actorId.
+defaultContentType: application/json
+servers:
+  production:
+    host: nats:4222
+    protocol: nats
+    description: NATS broker on the edge network.
+
+# ─────────────────────────────── Channels ───────────────────────────────
+
+channels:
+  # Arrival
+  queue-manager.patient.arrived:
+    address: queue-manager.patient.arrived
+    messages:
+      PatientArrived:
+        $ref: '#/components/messages/PatientArrived'
+
+  # Triage
+  queue-manager.triage.concluded:
+    address: queue-manager.triage.concluded
+    messages:
+      TriageConcluded:
+        $ref: '#/components/messages/TriageConcluded'
+
+  # Care Plan
+  queue-manager.care-plan.created:
+    address: queue-manager.care-plan.created
+    messages:
+      CarePlanCreated:
+        $ref: '#/components/messages/CarePlanCreated'
+
+  # Service Order
+  queue-manager.service-order.ready:
+    address: queue-manager.service-order.ready
+    messages:
+      ServiceOrderReady:
+        $ref: '#/components/messages/ServiceOrderReady'
+
+  # Professional Queue
+  queue-manager.professional.queue-opened:
+    address: queue-manager.professional.queue-opened
+    messages:
+      ProfessionalQueueOpened:
+        $ref: '#/components/messages/ProfessionalQueueOpened'
+
+  queue-manager.service-order.reserved:
+    address: queue-manager.service-order.reserved
+    messages:
+      ServiceOrderReserved:
+        $ref: '#/components/messages/ServiceOrderReserved'
+
+  # Care Lifecycle
+  queue-manager.care.started:
+    address: queue-manager.care.started
+    messages:
+      CareStarted:
+        $ref: '#/components/messages/CareStarted'
+
+  queue-manager.proof-of-care.attached:
+    address: queue-manager.proof-of-care.attached
+    messages:
+      ProofOfCareAttached:
+        $ref: '#/components/messages/ProofOfCareAttached'
+
+  queue-manager.care.completed:
+    address: queue-manager.care.completed
+    messages:
+      CareCompleted:
+        $ref: '#/components/messages/CareCompleted'
+
+  # Carry Over
+  queue-manager.service-order.carry-over:
+    address: queue-manager.service-order.carry-over
+    messages:
+      ServiceOrderCarryOver:
+        $ref: '#/components/messages/ServiceOrderCarryOver'
+
+  # Cancellation
+  queue-manager.cancellation.requested:
+    address: queue-manager.cancellation.requested
+    messages:
+      CancellationRequested:
+        $ref: '#/components/messages/CancellationRequested'
+
+  queue-manager.cancellation.approved:
+    address: queue-manager.cancellation.approved
+    messages:
+      CancellationApproved:
+        $ref: '#/components/messages/CancellationApproved'
+
+  # No-Show
+  queue-manager.no-show.registered:
+    address: queue-manager.no-show.registered
+    messages:
+      NoShowRegistered:
+        $ref: '#/components/messages/NoShowRegistered'
+
+  # Day Close
+  queue-manager.day.closed:
+    address: queue-manager.day.closed
+    messages:
+      DayClosed:
+        $ref: '#/components/messages/DayClosed'
+
+# ─────────────────────────────── Operations ───────────────────────────────
+
+operations:
+  # Arrival
+  publishPatientArrived:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.patient.arrived'
+    messages:
+      - $ref: '#/channels/queue-manager.patient.arrived/messages/PatientArrived'
+
+  # Triage
+  publishTriageConcluded:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.triage.concluded'
+    messages:
+      - $ref: '#/channels/queue-manager.triage.concluded/messages/TriageConcluded'
+
+  # Care Plan
+  publishCarePlanCreated:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.care-plan.created'
+    messages:
+      - $ref: '#/channels/queue-manager.care-plan.created/messages/CarePlanCreated'
+
+  # Service Order
+  publishServiceOrderReady:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.service-order.ready'
+    messages:
+      - $ref: '#/channels/queue-manager.service-order.ready/messages/ServiceOrderReady'
+
+  # Professional Queue
+  publishProfessionalQueueOpened:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.professional.queue-opened'
+    messages:
+      - $ref: '#/channels/queue-manager.professional.queue-opened/messages/ProfessionalQueueOpened'
+
+  publishServiceOrderReserved:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.service-order.reserved'
+    messages:
+      - $ref: '#/channels/queue-manager.service-order.reserved/messages/ServiceOrderReserved'
+
+  # Care Lifecycle
+  publishCareStarted:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.care.started'
+    messages:
+      - $ref: '#/channels/queue-manager.care.started/messages/CareStarted'
+
+  publishProofOfCareAttached:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.proof-of-care.attached'
+    messages:
+      - $ref: '#/channels/queue-manager.proof-of-care.attached/messages/ProofOfCareAttached'
+
+  publishCareCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.care.completed'
+    messages:
+      - $ref: '#/channels/queue-manager.care.completed/messages/CareCompleted'
+
+  # Carry Over
+  publishServiceOrderCarryOver:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.service-order.carry-over'
+    messages:
+      - $ref: '#/channels/queue-manager.service-order.carry-over/messages/ServiceOrderCarryOver'
+
+  # Cancellation
+  publishCancellationRequested:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.cancellation.requested'
+    messages:
+      - $ref: '#/channels/queue-manager.cancellation.requested/messages/CancellationRequested'
+
+  publishCancellationApproved:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.cancellation.approved'
+    messages:
+      - $ref: '#/channels/queue-manager.cancellation.approved/messages/CancellationApproved'
+
+  # No-Show
+  publishNoShowRegistered:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.no-show.registered'
+    messages:
+      - $ref: '#/channels/queue-manager.no-show.registered/messages/NoShowRegistered'
+
+  # Day Close
+  publishDayClosed:
+    action: send
+    channel:
+      $ref: '#/channels/queue-manager.day.closed'
+    messages:
+      - $ref: '#/channels/queue-manager.day.closed/messages/DayClosed'
+
+# ─────────────────────────────── Components ───────────────────────────────
+
+components:
+  messages:
+    # Arrival
+    PatientArrived:
+      name: PatientArrived
+      title: Patient Arrived
+      summary: Emitted when a patient arrives and is checked in at reception.
+      payload:
+        $ref: ../model/schemas/PatientArrivedEventPayload.yaml
+
+    # Triage
+    TriageConcluded:
+      name: TriageConcluded
+      title: Triage Concluded
+      summary: Emitted when triage assessment is concluded for a patient.
+      payload:
+        $ref: ../model/schemas/TriageConcludedEventPayload.yaml
+
+    # Care Plan
+    CarePlanCreated:
+      name: CarePlanCreated
+      title: Care Plan Created
+      summary: Emitted when a care plan is created for a patient.
+      payload:
+        $ref: ../model/schemas/CarePlanCreatedEventPayload.yaml
+
+    # Service Order
+    ServiceOrderReady:
+      name: ServiceOrderReady
+      title: Service Order Ready
+      summary: Emitted when a service order is ready to be assigned.
+      payload:
+        $ref: ../model/schemas/ServiceOrderReadyEventPayload.yaml
+
+    # Professional Queue
+    ProfessionalQueueOpened:
+      name: ProfessionalQueueOpened
+      title: Professional Queue Opened
+      summary: Emitted when a professional opens their queue for the day.
+      payload:
+        $ref: ../model/schemas/ProfessionalQueueOpenedEventPayload.yaml
+
+    ServiceOrderReserved:
+      name: ServiceOrderReserved
+      title: Service Order Reserved
+      summary: Emitted when a service order is reserved by a professional.
+      payload:
+        $ref: ../model/schemas/ServiceOrderReservedEventPayload.yaml
+
+    # Care Lifecycle
+    CareStarted:
+      name: CareStarted
+      title: Care Started
+      summary: Emitted when a professional starts attending a patient.
+      payload:
+        $ref: ../model/schemas/CareStartedEventPayload.yaml
+
+    ProofOfCareAttached:
+      name: ProofOfCareAttached
+      title: Proof of Care Attached
+      summary: Emitted when proof of care documentation is attached to an appointment.
+      payload:
+        $ref: ../model/schemas/ProofOfCareAttachedEventPayload.yaml
+
+    CareCompleted:
+      name: CareCompleted
+      title: Care Completed
+      summary: Emitted when a care session is completed by a professional.
+      payload:
+        $ref: ../model/schemas/CareCompletedEventPayload.yaml
+
+    # Carry Over
+    ServiceOrderCarryOver:
+      name: ServiceOrderCarryOver
+      title: Service Order Carry Over
+      summary: Emitted when a service order is carried over to the next day.
+      payload:
+        $ref: ../model/schemas/ServiceOrderCarryOverEventPayload.yaml
+
+    # Cancellation
+    CancellationRequested:
+      name: CancellationRequested
+      title: Cancellation Requested
+      summary: Emitted when a cancellation is requested for a service order.
+      payload:
+        $ref: ../model/schemas/CancellationRequestedEventPayload.yaml
+
+    CancellationApproved:
+      name: CancellationApproved
+      title: Cancellation Approved
+      summary: Emitted when a cancellation request is approved.
+      payload:
+        $ref: ../model/schemas/CancellationApprovedEventPayload.yaml
+
+    # No-Show
+    NoShowRegistered:
+      name: NoShowRegistered
+      title: No-Show Registered
+      summary: Emitted when a patient is registered as a no-show.
+      payload:
+        $ref: ../model/schemas/NoShowRegisteredEventPayload.yaml
+
+    # Day Close
+    DayClosed:
+      name: DayClosed
+      title: Day Closed
+      summary: Emitted when the operational day is closed.
+      payload:
+        $ref: ../model/schemas/DayClosedEventPayload.yaml

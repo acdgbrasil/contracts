@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ServiceOrderPriority
+type: string
+enum:
+  - CarryOverMax
+  - Normal
+  - CancellationPending
+description: |
+  Priority level for a service order in the specialty queue (highest to lowest).
+  CarryOverMax: unattended orders from a previous day, jump ahead of Normal.
+  Normal: standard FIFO order.
+  CancellationPending: lowest priority, awaiting social worker approval.

@@ -1,0 +1,6 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ApproveCancellationRequest
+description: Social worker approves a pending cancellation, marking it as a justified absence.
+type: object
+additionalProperties: false
+properties: {}

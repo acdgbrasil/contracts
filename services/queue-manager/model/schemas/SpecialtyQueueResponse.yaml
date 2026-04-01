@@ -1,0 +1,22 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SpecialtyQueueResponse
+description: Current state of a specialty queue.
+type: object
+additionalProperties: false
+required:
+  - specialtyId
+  - specialtyName
+  - items
+  - totalInQueue
+properties:
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  items:
+    type: array
+    items:
+      $ref: ./QueueItem.yaml
+  totalInQueue:
+    type: integer
+    minimum: 0

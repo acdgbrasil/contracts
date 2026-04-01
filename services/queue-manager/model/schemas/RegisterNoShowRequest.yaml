@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegisterNoShowRequest
+description: Registers a no-show for a called service order (unjustified absence).
+type: object
+additionalProperties: false
+properties:
+  reason:
+    type: string
+    description: Optional reason or notes about the no-show.

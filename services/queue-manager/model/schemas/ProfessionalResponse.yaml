@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ProfessionalResponse
+type: object
+additionalProperties: false
+required:
+  - id
+  - personId
+  - name
+  - specialtyId
+  - specialtyName
+  - status
+  - createdAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  name:
+    type: string
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  status:
+    $ref: ./ProfessionalStatus.yaml
+  createdAt:
+    $ref: ./IsoDateTime.yaml

@@ -1,0 +1,23 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: QueueItem
+description: An item in a specialty queue.
+type: object
+additionalProperties: false
+required:
+  - serviceOrderId
+  - personId
+  - position
+  - priority
+  - arrivedAt
+properties:
+  serviceOrderId:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  position:
+    type: integer
+    minimum: 1
+  priority:
+    $ref: ./ServiceOrderPriority.yaml
+  arrivedAt:
+    $ref: ./IsoDateTime.yaml

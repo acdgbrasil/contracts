@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AttachProofOfCareRequest
+description: Attaches proof of care (signed document photo) to a service order. Required before completing care.
+type: object
+additionalProperties: false
+required:
+  - serviceOrderId
+  - description
+properties:
+  serviceOrderId:
+    $ref: ./Uuid.yaml
+  description:
+    type: string
+    minLength: 1
+    description: Description of the proof document.
+  fileUrl:
+    type: string
+    format: uri
+    description: URL or handle of the uploaded proof file (optional if file upload is handled separately).

@@ -1,0 +1,40 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: TriageConcludedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: ID of the actor who triggered this event.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - personId
+      - visitId
+      - specialties
+    properties:
+      personId:
+        $ref: ./Uuid.yaml
+      visitId:
+        $ref: ./Uuid.yaml
+      specialties:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          additionalProperties: false
+          required:
+            - specialtyId
+            - serviceOrderId
+          properties:
+            specialtyId:
+              $ref: ./Uuid.yaml
+            serviceOrderId:
+              $ref: ./Uuid.yaml

@@ -1,0 +1,16 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ErrorResponse
+type: object
+additionalProperties: false
+required:
+  - success
+  - error
+properties:
+  success:
+    type: boolean
+    const: false
+  error:
+    $ref: ../../../../shared/schemas/Error.yaml
+  details:
+    type: object
+    additionalProperties: true

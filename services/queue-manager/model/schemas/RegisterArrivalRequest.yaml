@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegisterArrivalRequest
+description: Registers a person's arrival at the unit, creating a daily visit and entering the triage queue.
+type: object
+additionalProperties: false
+required:
+  - personId
+properties:
+  personId:
+    $ref: ./Uuid.yaml

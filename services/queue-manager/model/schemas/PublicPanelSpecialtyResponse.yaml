@@ -1,0 +1,23 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PublicPanelSpecialtyResponse
+description: Public panel data for a specialty (displayed on TV at the unit).
+type: object
+additionalProperties: false
+required:
+  - specialtyId
+  - specialtyName
+  - nextCalls
+properties:
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  currentCall:
+    $ref: ./CurrentCall.yaml
+    description: Currently in-progress call (null if none).
+  nextCalls:
+    type: array
+    maxItems: 3
+    items:
+      $ref: ./CurrentCall.yaml
+    description: Next upcoming calls (up to 3).

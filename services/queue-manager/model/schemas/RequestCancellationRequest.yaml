@@ -1,0 +1,12 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RequestCancellationRequest
+description: Requests cancellation of a service order. Requires social worker approval (R4).
+type: object
+additionalProperties: false
+required:
+  - reason
+properties:
+  reason:
+    type: string
+    minLength: 1
+    description: Reason for the cancellation request.

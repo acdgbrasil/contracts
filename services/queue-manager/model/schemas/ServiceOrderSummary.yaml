@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ServiceOrderSummary
+description: Lightweight service order projection used inside DailyVisit responses.
+type: object
+additionalProperties: false
+required:
+  - id
+  - specialtyName
+  - status
+  - priority
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  status:
+    $ref: ./ServiceOrderStatus.yaml
+  priority:
+    $ref: ./ServiceOrderPriority.yaml

@@ -1,0 +1,26 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ProfessionalPanelResponse
+description: Professional's dashboard showing current status and queue info.
+type: object
+additionalProperties: false
+required:
+  - professionalId
+  - specialtyId
+  - specialtyName
+  - queueOpen
+  - completedToday
+properties:
+  professionalId:
+    $ref: ./Uuid.yaml
+  specialtyId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  queueOpen:
+    type: boolean
+  currentServiceOrder:
+    $ref: ./ServiceOrderResponse.yaml
+    description: Service order currently in progress (null if none).
+  completedToday:
+    type: integer
+    minimum: 0

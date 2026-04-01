@@ -1,0 +1,16 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: TriageQueueResponse
+description: Current state of the triage queue.
+type: object
+additionalProperties: false
+required:
+  - items
+  - totalInQueue
+properties:
+  items:
+    type: array
+    items:
+      $ref: ./TriageQueueItem.yaml
+  totalInQueue:
+    type: integer
+    minimum: 0

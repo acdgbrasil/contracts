@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: DailyVisitResponse
+description: A patient's daily visit with all service orders for that day.
+type: object
+additionalProperties: false
+required:
+  - id
+  - personId
+  - date
+  - status
+  - serviceOrders
+  - createdAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  date:
+    $ref: ./IsoDate.yaml
+  status:
+    $ref: ./DailyVisitStatus.yaml
+  serviceOrders:
+    type: array
+    items:
+      $ref: ./ServiceOrderSummary.yaml
+  createdAt:
+    $ref: ./IsoDateTime.yaml

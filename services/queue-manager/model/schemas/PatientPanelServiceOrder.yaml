@@ -1,0 +1,24 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientPanelServiceOrder
+description: Service order status as seen from the patient panel.
+type: object
+additionalProperties: false
+required:
+  - serviceOrderId
+  - specialtyName
+  - status
+properties:
+  serviceOrderId:
+    $ref: ./Uuid.yaml
+  specialtyName:
+    type: string
+  status:
+    $ref: ./ServiceOrderStatus.yaml
+  queuePosition:
+    type: integer
+    minimum: 1
+    description: Current position in the specialty queue (null if not in queue).
+  estimatedMinutes:
+    type: integer
+    minimum: 0
+    description: Estimated wait time in minutes (null if unavailable).

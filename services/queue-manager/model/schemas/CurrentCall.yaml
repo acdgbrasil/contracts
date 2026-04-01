@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CurrentCall
+description: Information about a currently called or in-progress service order (for public panel).
+type: object
+additionalProperties: false
+required:
+  - serviceOrderId
+  - personId
+  - professionalName
+properties:
+  serviceOrderId:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  professionalName:
+    type: string
+  room:
+    type: string
+    description: Room or location where the patient should go.
