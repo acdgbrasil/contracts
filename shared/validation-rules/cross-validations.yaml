@@ -18,7 +18,7 @@ cross_field_rules:
   # ---------------------------------------------------------------------------
   - id: cv_pregnancy_requires_female
     context: UpdateHealthStatus
-    description: "Membros listados como gestantes devem ter sexo FEMININO"
+    description: "Membros listados como gestantes não podem ter sexo MASCULINO"
     scope: |
       Apenas a Pessoa de Referência (PR/titular) é validada no backend,
       pois dados de sexo de outros membros vivem no bounded context people-context.
@@ -30,9 +30,9 @@ cross_field_rules:
       check: |
         Para cada memberId em gestatingMembers:
           Se memberId == patient.personId (é o titular):
-            patient.personalData.sex DEVE ser "FEMININO"
+            patient.personalData.sex NÃO DEVE ser "MASCULINO"
     error_code: CV-001
-    message: "Membro gestante deve ter sexo feminino"
+    message: "Membro gestante não pode ter sexo masculino"
     http_status: 422
 
   # ---------------------------------------------------------------------------

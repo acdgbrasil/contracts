@@ -17,3 +17,13 @@ properties:
     exclusiveMinimum: 0
   beneficiaryId:
     $ref: ./Uuid.yaml
+  benefitTypeId:
+    $ref: ./Uuid.yaml
+    description: Lookup ID for benefit type (dominio_tipo_beneficio). Required for metadata-driven validations.
+  birthCertificateNumber:
+    type: string
+    description: Birth certificate number. Conditionally required when benefit type has exige_registro_nascimento flag.
+  deceasedCpf:
+    type: string
+    pattern: ^\d{11}$
+    description: CPF of the deceased. Conditionally required when benefit type has exige_cpf_falecido flag.

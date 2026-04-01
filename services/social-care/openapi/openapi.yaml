@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Social Care Sync Contract
-  version: 3.1.0
+  version: 3.2.0
   description: |
     Synchronous APIs for the social-care service.
     All mutation endpoints require the X-Actor-Id header.

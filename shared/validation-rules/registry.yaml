@@ -76,7 +76,7 @@ value_objects:
       sex:
         type: enum
         required: true
-        values: [MASCULINO, FEMININO]
+        values: [MASCULINO, FEMININO, OUTRO]
 
       socialName:
         type: string

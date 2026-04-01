@@ -44,7 +44,7 @@ properties:
         minLength: 1
       sex:
         type: string
-        enum: [male, female]
+        enum: [masculino, feminino, outro]
       socialName:
         type: string
       birthDate:

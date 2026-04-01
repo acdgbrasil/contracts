@@ -35,7 +35,7 @@ properties:
         type: string
       sex:
         type: string
-        enum: [male, female]
+        enum: [masculino, feminino, outro]
       socialName:
         type: string
       phone:
