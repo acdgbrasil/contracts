@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegisterPersonRequest
+description: |
+  Registers a person in the ACDG ecosystem.
+  If a CPF is provided and already exists, returns the existing person (idempotent dedup).
+type: object
+additionalProperties: false
+required:
+  - fullName
+  - birthDate
+properties:
+  fullName:
+    type: string
+    minLength: 1
+    maxLength: 200
+  cpf:
+    type: string
+    pattern: ^\d{11}$
+    description: Brazilian CPF. Used as dedup key when provided.
+  birthDate:
+    $ref: ./IsoDate.yaml

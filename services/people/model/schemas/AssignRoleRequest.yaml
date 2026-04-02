@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AssignRoleRequest
+description: Assigns a system role to a person.
+type: object
+additionalProperties: false
+required:
+  - system
+  - role
+properties:
+  system:
+    type: string
+    minLength: 1
+    description: "Service identifier (e.g., social-care, queue-manager, therapies, timesheet)."
+  role:
+    type: string
+    minLength: 1
+    description: "Domain role in that system (e.g., patient, professional, family-member, employee, therapist)."

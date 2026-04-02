@@ -1,0 +1,5 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: IsoDateTime
+type: string
+format: date-time
+description: ISO 8601 date-time with timezone.

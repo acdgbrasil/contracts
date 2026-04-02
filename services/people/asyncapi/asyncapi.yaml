@@ -1,0 +1,124 @@
+asyncapi: 3.1.0
+info:
+  title: People Context Async Contract
+  version: 1.0.0
+  description: |
+    Asynchronous event contracts for the people-context service.
+    Events are published via Transactional Outbox pattern and relayed to NATS.
+    All events carry metadata (eventId, occurredAt, schemaVersion) and an actorId.
+defaultContentType: application/json
+servers:
+  production:
+    host: nats:4222
+    protocol: nats
+    description: NATS broker on the edge network.
+
+# ─────────────────────────────── Channels ───────────────────────────────
+
+channels:
+  people.person.registered:
+    address: people.person.registered
+    messages:
+      PersonRegistered:
+        $ref: '#/components/messages/PersonRegistered'
+
+  people.person.updated:
+    address: people.person.updated
+    messages:
+      PersonUpdated:
+        $ref: '#/components/messages/PersonUpdated'
+
+  people.role.assigned:
+    address: people.role.assigned
+    messages:
+      RoleAssigned:
+        $ref: '#/components/messages/RoleAssigned'
+
+  people.role.deactivated:
+    address: people.role.deactivated
+    messages:
+      RoleDeactivated:
+        $ref: '#/components/messages/RoleDeactivated'
+
+  people.role.reactivated:
+    address: people.role.reactivated
+    messages:
+      RoleReactivated:
+        $ref: '#/components/messages/RoleReactivated'
+
+# ─────────────────────────────── Operations ───────────────────────────────
+
+operations:
+  publishPersonRegistered:
+    action: send
+    channel:
+      $ref: '#/channels/people.person.registered'
+    messages:
+      - $ref: '#/channels/people.person.registered/messages/PersonRegistered'
+
+  publishPersonUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/people.person.updated'
+    messages:
+      - $ref: '#/channels/people.person.updated/messages/PersonUpdated'
+
+  publishRoleAssigned:
+    action: send
+    channel:
+      $ref: '#/channels/people.role.assigned'
+    messages:
+      - $ref: '#/channels/people.role.assigned/messages/RoleAssigned'
+
+  publishRoleDeactivated:
+    action: send
+    channel:
+      $ref: '#/channels/people.role.deactivated'
+    messages:
+      - $ref: '#/channels/people.role.deactivated/messages/RoleDeactivated'
+
+  publishRoleReactivated:
+    action: send
+    channel:
+      $ref: '#/channels/people.role.reactivated'
+    messages:
+      - $ref: '#/channels/people.role.reactivated/messages/RoleReactivated'
+
+# ─────────────────────────────── Components ───────────────────────────────
+
+components:
+  messages:
+    PersonRegistered:
+      name: PersonRegistered
+      title: Person Registered
+      summary: Emitted when a new person is registered in the ACDG ecosystem.
+      payload:
+        $ref: ../model/schemas/PersonRegisteredEventPayload.yaml
+
+    PersonUpdated:
+      name: PersonUpdated
+      title: Person Updated
+      summary: Emitted when a person's identity data is updated.
+      payload:
+        $ref: ../model/schemas/PersonUpdatedEventPayload.yaml
+
+    RoleAssigned:
+      name: RoleAssigned
+      title: Role Assigned
+      summary: Emitted when a system role is assigned to a person.
+      payload:
+        $ref: ../model/schemas/RoleAssignedEventPayload.yaml
+
+    RoleDeactivated:
+      name: RoleDeactivated
+      title: Role Deactivated
+      summary: Emitted when a system role is deactivated for a person.
+      payload:
+        $ref: ../model/schemas/RoleDeactivatedEventPayload.yaml
+
+    RoleReactivated:
+      name: RoleReactivated
+      title: Role Reactivated
+      summary: Emitted when a previously deactivated system role is reactivated.
+      payload:
+        $ref: ../model/schemas/RoleReactivatedEventPayload.yaml

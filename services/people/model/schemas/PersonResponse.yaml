@@ -1,0 +1,26 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PersonResponse
+description: Person identity record.
+type: object
+additionalProperties: false
+required:
+  - id
+  - fullName
+  - birthDate
+  - createdAt
+  - updatedAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  fullName:
+    type: string
+  cpf:
+    type: string
+    pattern: ^\d{11}$
+    description: Brazilian CPF (nullable if not provided).
+  birthDate:
+    $ref: ./IsoDate.yaml
+  createdAt:
+    $ref: ./IsoDateTime.yaml
+  updatedAt:
+    $ref: ./IsoDateTime.yaml

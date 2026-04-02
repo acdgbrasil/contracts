@@ -1,0 +1,5 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: IsoDate
+type: string
+format: date
+description: ISO 8601 calendar date (YYYY-MM-DD).

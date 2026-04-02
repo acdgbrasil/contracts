@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PersonSummaryResponse
+description: Lightweight person projection for listing.
+type: object
+additionalProperties: false
+required:
+  - id
+  - fullName
+  - birthDate
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  fullName:
+    type: string
+  cpf:
+    type: string
+    pattern: ^\d{11}$
+  birthDate:
+    $ref: ./IsoDate.yaml

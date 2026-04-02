@@ -1,0 +1,30 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PersonRegisteredEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: ID of the actor who triggered this event.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - personId
+      - fullName
+      - birthDate
+    properties:
+      personId:
+        $ref: ./Uuid.yaml
+      fullName:
+        type: string
+      cpf:
+        type: string
+      birthDate:
+        $ref: ./IsoDate.yaml

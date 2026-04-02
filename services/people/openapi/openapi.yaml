@@ -1,0 +1,540 @@
+openapi: 3.1.0
+info:
+  title: People Context Sync Contract
+  version: 1.0.0
+  description: |
+    Synchronous APIs for the people-context service.
+    Central identity registry for the ACDG ecosystem.
+    All mutation endpoints require the X-Actor-Id header.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://people.acdgbrasil.com.br/api/v1
+    description: Production
+tags:
+  - name: Health
+    description: Infrastructure health probes.
+  - name: Person
+    description: Person identity registration, lookup, and update.
+  - name: Roles
+    description: System role assignment and query.
+security:
+  - bearerAuth: []
+
+paths:
+  # ──────────────────────────── Health ────────────────────────────
+
+  /health:
+    servers:
+      - url: https://people.acdgbrasil.com.br
+    get:
+      operationId: liveness
+      summary: Liveness check
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Service is alive.
+
+  /ready:
+    servers:
+      - url: https://people.acdgbrasil.com.br
+    get:
+      operationId: readiness
+      summary: Readiness check
+      description: Verifies database connectivity.
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+        '503':
+          description: Service is unavailable (database unreachable).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessResponse'
+
+  # ──────────────────────────── Person ────────────────────────────
+
+  /people:
+    post:
+      operationId: registerPerson
+      summary: Register person
+      description: |
+        Registers a person in the ACDG ecosystem.
+        If a CPF is provided and already exists, returns the existing person (idempotent dedup).
+      tags: [Person]
+      parameters:
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPersonRequest'
+      responses:
+        '201':
+          description: Person registered (or existing person returned via CPF dedup).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listPeople
+      summary: List people
+      description: Returns a paginated list of people. Supports search by fullName or CPF.
+      tags: [Person]
+      parameters:
+        - name: search
+          in: query
+          required: false
+          description: Filter by fullName or CPF (case-insensitive, partial match).
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          description: UUID of the last item from the previous page.
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page (1-100, default 20).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Paginated people list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPersonListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/{personId}:
+    get:
+      operationId: getPerson
+      summary: Get person by ID
+      description: Returns the person identity record.
+      tags: [Person]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: Person found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardPersonResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      operationId: updatePerson
+      summary: Update person
+      description: Updates a person's identity data.
+      tags: [Person]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonRequest'
+      responses:
+        '204':
+          description: Person updated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/by-cpf/{cpf}:
+    get:
+      operationId: findPersonByCpf
+      summary: Find person by CPF
+      description: Looks up a person using their CPF (dedup key).
+      tags: [Person]
+      parameters:
+        - name: cpf
+          in: path
+          required: true
+          description: Brazilian CPF (11 digits).
+          schema:
+            type: string
+            pattern: ^\d{11}$
+      responses:
+        '200':
+          description: Person found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardPersonResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Roles ────────────────────────────
+
+  /people/{personId}/roles:
+    post:
+      operationId: assignRole
+      summary: Assign system role
+      description: |
+        Assigns a domain role to a person for a specific system.
+        Idempotent: if the same (system, role) already exists and is active, returns 204.
+      tags: [Roles]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRoleRequest'
+      responses:
+        '201':
+          description: Role assigned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIdResponse'
+        '204':
+          description: Role already exists and is active (idempotent).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      operationId: listPersonRoles
+      summary: List person roles
+      description: Returns all system roles for a person.
+      tags: [Roles]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - name: active
+          in: query
+          required: false
+          description: Filter by active status.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Roles listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardRoleListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/{personId}/roles/{roleId}/deactivate:
+    put:
+      operationId: deactivateRole
+      summary: Deactivate role
+      description: Sets a system role to inactive (soft removal).
+      tags: [Roles]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/RoleId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Role deactivated.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/{personId}/roles/{roleId}/reactivate:
+    put:
+      operationId: reactivateRole
+      summary: Reactivate role
+      description: Reactivates a previously deactivated system role.
+      tags: [Roles]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/RoleId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Role reactivated.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /roles:
+    get:
+      operationId: queryRoles
+      summary: Query roles across people
+      description: |
+        Query system roles across all people. Useful for finding all professionals
+        in queue-manager, all patients in social-care, etc.
+      tags: [Roles]
+      parameters:
+        - name: system
+          in: query
+          required: true
+          description: Filter by system identifier.
+          schema:
+            type: string
+        - name: role
+          in: query
+          required: false
+          description: Filter by role within the system.
+          schema:
+            type: string
+        - name: active
+          in: query
+          required: false
+          description: Filter by active status (default true).
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Matching roles with person data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardRoleQueryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: true
+      description: Identifier of the actor performing the operation.
+      schema:
+        type: string
+    PersonId:
+      name: personId
+      in: path
+      required: true
+      description: Person identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    RoleId:
+      name: roleId
+      in: path
+      required: true
+      description: System role assignment identifier (UUID).
+      schema:
+        $ref: '#/components/schemas/Uuid'
+
+  schemas:
+    # Primitives
+    Uuid:
+      $ref: ../model/schemas/Uuid.yaml
+    IsoDate:
+      $ref: ../model/schemas/IsoDate.yaml
+    IsoDateTime:
+      $ref: ../model/schemas/IsoDateTime.yaml
+
+    # Infrastructure
+    ReadinessResponse:
+      $ref: ../model/schemas/ReadinessResponse.yaml
+    IdResponse:
+      $ref: ../model/schemas/IdResponse.yaml
+    ErrorResponse:
+      $ref: ../model/schemas/ErrorResponse.yaml
+
+    # Domain responses
+    PersonResponse:
+      $ref: ../model/schemas/PersonResponse.yaml
+    PersonSummaryResponse:
+      $ref: ../model/schemas/PersonSummaryResponse.yaml
+    SystemRoleResponse:
+      $ref: ../model/schemas/SystemRoleResponse.yaml
+
+    # Requests
+    RegisterPersonRequest:
+      $ref: ../model/schemas/RegisterPersonRequest.yaml
+    UpdatePersonRequest:
+      $ref: ../model/schemas/UpdatePersonRequest.yaml
+    AssignRoleRequest:
+      $ref: ../model/schemas/AssignRoleRequest.yaml
+
+    # Composed response wrappers
+    StandardIdResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/IdResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardPersonResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/PersonResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    PaginatedPersonListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonSummaryResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp, pageSize, totalCount, hasMore]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+            pageSize:
+              type: integer
+              minimum: 1
+              maximum: 100
+            totalCount:
+              type: integer
+              minimum: 0
+            hasMore:
+              type: boolean
+            nextCursor:
+              $ref: '#/components/schemas/Uuid'
+
+    StandardRoleListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemRoleResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+    StandardRoleQueryResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [person, role]
+            properties:
+              person:
+                $ref: '#/components/schemas/PersonSummaryResponse'
+              role:
+                $ref: '#/components/schemas/SystemRoleResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
+  responses:
+    BadRequest:
+      description: Invalid input data.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflict with current resource state.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Target resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnprocessableEntity:
+      description: Business validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Unexpected server-side failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

@@ -1,0 +1,27 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SystemRoleResponse
+description: A person's role in a specific system.
+type: object
+additionalProperties: false
+required:
+  - id
+  - personId
+  - system
+  - role
+  - active
+  - assignedAt
+properties:
+  id:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  system:
+    type: string
+    description: "Service identifier (e.g., social-care, queue-manager, therapies, timesheet)."
+  role:
+    type: string
+    description: "Domain role in that system (e.g., patient, professional, family-member, employee, therapist)."
+  active:
+    type: boolean
+  assignedAt:
+    $ref: ./IsoDateTime.yaml

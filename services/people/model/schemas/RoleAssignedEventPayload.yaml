@@ -1,0 +1,28 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RoleAssignedEventPayload
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: ID of the actor who triggered this event.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - personId
+      - system
+      - role
+    properties:
+      personId:
+        $ref: ./Uuid.yaml
+      system:
+        type: string
+      role:
+        type: string

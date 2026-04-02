@@ -1,0 +1,18 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: UpdatePersonRequest
+description: Updates a person's identity data.
+type: object
+additionalProperties: false
+required:
+  - fullName
+  - birthDate
+properties:
+  fullName:
+    type: string
+    minLength: 1
+    maxLength: 200
+  cpf:
+    type: string
+    pattern: ^\d{11}$
+  birthDate:
+    $ref: ./IsoDate.yaml
