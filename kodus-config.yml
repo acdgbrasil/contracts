@@ -1,0 +1,42 @@
+version: '1.2'
+
+summary:
+  generatePRSummary: true
+  customInstructions: >
+    Summarize schema changes by bounded context (Kernel, Registry, Assessment, Care, Protection).
+    Highlight breaking changes, new endpoints, new events, and $ref consistency.
+  behaviourForExistingDescription: concatenate
+
+ignorePaths:
+  - node_modules/
+  - '*.lock'
+  - .github/
+
+baseBranches: []
+
+reviewOptions:
+  security: true
+  code_style: true
+  kody_rules: true
+  refactoring: false
+  error_handling: true
+  maintainability: true
+  potential_issues: true
+  documentation_and_comments: false
+  performance_and_optimization: false
+  business_logic: true
+
+suggestionControl:
+  groupingMode: full
+  limitationType: pr
+  maxSuggestions: 9
+  severityLevelFilter: medium
+
+ignoredTitleKeywords:
+  - chore
+  - ci
+
+automatedReviewActive: true
+pullRequestApprovalActive: false
+isRequestChangesActive: false
+llmGeneratedMemoriesRequireApproval: false
