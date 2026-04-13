@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ReadinessResponse
+description: Readiness check response with subsystem health status.
+type: object
+additionalProperties: false
+required:
+  - status
+  - database
+  - nats
+properties:
+  status:
+    type: string
+    enum:
+      - ready
+      - unavailable
+  database:
+    type: boolean
+    description: PostgreSQL connectivity status.
+  nats:
+    type: boolean
+    description: NATS JetStream connectivity status.

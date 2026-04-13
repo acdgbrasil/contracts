@@ -1,0 +1,15 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: WithdrawPatientRequest
+description: Request to withdraw a patient from the waitlist.
+type: object
+additionalProperties: false
+required:
+  - reason
+properties:
+  reason:
+    type: string
+    minLength: 1
+    description: Reason for withdrawal.
+  notes:
+    type: string
+    description: Optional additional notes about the withdrawal.

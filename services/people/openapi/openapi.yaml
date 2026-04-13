@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: People Context Sync Contract
-  version: 1.0.0
+  version: 1.1.0
   description: |
     Synchronous APIs for the people-context service.
     Central identity registry for the ACDG ecosystem.
@@ -87,8 +87,6 @@ paths:
                 $ref: '#/components/schemas/StandardIdResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
     get:
@@ -170,10 +168,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -279,8 +273,6 @@ paths:
           description: Role deactivated.
         '404':
           $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -299,8 +291,6 @@ paths:
           description: Role reactivated.
         '404':
           $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalServerError'
 

@@ -10,3 +10,17 @@ properties:
     enum:
       - ready
       - unavailable
+  checks:
+    type: object
+    additionalProperties: false
+    description: Individual subsystem health check results.
+    properties:
+      database:
+        type: boolean
+      nats:
+        type: boolean
+      outbox:
+        type: boolean
+      outboxBacklog:
+        type: integer
+        minimum: 0

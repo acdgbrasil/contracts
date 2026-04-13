@@ -1,0 +1,23 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: KAnonymityNotice
+description: |
+  Notice attached when data cells have been suppressed or generalized
+  to maintain k-anonymity (k=5). Consumers should interpret suppressed
+  cells as unavailable, not zero.
+type: object
+additionalProperties: false
+required:
+  - suppressed
+  - message
+properties:
+  suppressed:
+    type: boolean
+    description: Whether any data cells were suppressed in this response.
+  message:
+    type: string
+    description: Human-readable explanation of the suppression policy.
+  suppressedFields:
+    type: array
+    items:
+      type: string
+    description: List of field paths that were suppressed due to low cell count.

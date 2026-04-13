@@ -1,5 +1,8 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: ErrorResponse
+description: |
+  Error response envelope. The people-context service returns a lightweight
+  error format with code and message fields.
 type: object
 additionalProperties: false
 required:
@@ -10,7 +13,16 @@ properties:
     type: boolean
     const: false
   error:
-    $ref: ../../../../shared/schemas/Error.yaml
-  details:
     type: object
-    additionalProperties: true
+    additionalProperties: false
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: string
+        description: Structured error code (e.g., PEO-001, ROL-001).
+        pattern: ^[A-Z]{2,4}-\d{3}$
+      message:
+        type: string
+        description: Human-readable error description.

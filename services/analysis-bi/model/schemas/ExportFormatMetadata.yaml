@@ -1,0 +1,21 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ExportFormatMetadata
+description: Metadata about a supported export file format.
+type: object
+additionalProperties: false
+required:
+  - format
+  - contentType
+  - description
+properties:
+  format:
+    $ref: ./ExportFormat.yaml
+  contentType:
+    type: string
+    description: "MIME type for Content-Type header (e.g., text/csv, application/json)."
+  description:
+    type: string
+    description: Human-readable description of the format and its typical use case.
+  extension:
+    type: string
+    description: "File extension without dot (e.g., csv, json, parquet)."

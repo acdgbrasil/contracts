@@ -1,0 +1,30 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: EpidemiologicalIndicators
+description: Aggregated epidemiological indicators with ICD distribution and new case trends.
+type: object
+additionalProperties: false
+required:
+  - totalDiagnoses
+  - icdDistribution
+  - newCasesTimeSeries
+properties:
+  totalDiagnoses:
+    type: integer
+    minimum: 0
+    description: Total number of recorded diagnoses in the filtered scope.
+  icdDistribution:
+    type: array
+    items:
+      $ref: ./ICDDistribution.yaml
+    description: Frequency distribution of ICD-10 codes, ordered by count descending.
+  topN:
+    type: integer
+    minimum: 1
+    description: Number of top diagnoses included in icdDistribution (when limited).
+  newCasesTimeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: New diagnoses registered per period.
+  kAnonymity:
+    $ref: ./KAnonymityNotice.yaml

@@ -1,0 +1,32 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: IndicatorRow
+description: |
+  A single aggregated data point returned by indicator queries.
+  Labels contain dimension values; value is the aggregate count.
+type: object
+additionalProperties: false
+required:
+  - labels
+  - value
+  - period
+properties:
+  labels:
+    type: object
+    additionalProperties:
+      type: string
+    description: |
+      Dimension values for this data point. Keys depend on the axis:
+      demographics → age_band, sex, mesoregion_code;
+      epidemiological → icd_code, icd_label;
+      socioeconomic → income_band, mesoregion_code;
+      protection → violation_type or destination, mesoregion_code;
+      care → appointment_type, mesoregion_code.
+  value:
+    type: integer
+    minimum: 0
+    description: Aggregated count for this combination of labels.
+  period:
+    type: string
+    description: |
+      Period label. Format depends on granularity:
+      monthly → "YYYY-MM", quarterly → "YYYY-Q#", yearly → "YYYY".

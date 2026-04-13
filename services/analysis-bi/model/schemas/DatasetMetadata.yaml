@@ -1,0 +1,51 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: DatasetMetadata
+description: Metadata describing an available dataset with its data dictionary.
+type: object
+additionalProperties: false
+required:
+  - name
+  - scope
+  - description
+  - fields
+  - recordCount
+  - lastUpdatedAt
+properties:
+  name:
+    type: string
+    description: Machine-readable dataset name.
+  scope:
+    $ref: ./DatasetScope.yaml
+  description:
+    type: string
+    description: Human-readable description of the dataset contents.
+  fields:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - type
+        - description
+      properties:
+        name:
+          type: string
+          description: Column/field name.
+        type:
+          type: string
+          description: "Data type (e.g., string, integer, date, boolean)."
+        description:
+          type: string
+          description: Human-readable field description.
+        nullable:
+          type: boolean
+          description: Whether this field can be null.
+    description: Data dictionary listing all fields in the dataset.
+  recordCount:
+    type: integer
+    minimum: 0
+    description: Current number of records in this dataset.
+  lastUpdatedAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp of the last materialization.

@@ -1,0 +1,13 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ExportFormat
+type: string
+enum:
+  - csv
+  - json
+  - xml
+  - parquet
+  - dbf
+  - dbc
+  - ods
+  - fhir
+description: Supported file formats for data export.

@@ -1,0 +1,456 @@
+openapi: 3.1.0
+info:
+  title: Analysis BI Sync Contract
+  version: 2.0.0
+  description: |
+    Synchronous APIs for the analysis-bi service (Go / chi).
+    Provides anonymized, aggregated indicators derived from social-care
+    domain events. All indicator data enforces k-anonymity (k=5) with
+    cell suppression when population counts are below threshold.
+    Authentication via JWT Bearer token with role-based access control.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: https://analysis-bi.acdgbrasil.com.br/api/v1
+    description: Production
+tags:
+  - name: Health
+    description: Infrastructure health probes.
+  - name: Indicators
+    description: Aggregated, anonymized indicator queries by axis.
+  - name: Export
+    description: Bulk data export in multiple formats.
+  - name: Metadata
+    description: Dataset, format, and region catalog.
+security:
+  - bearerAuth: []
+
+paths:
+  # ──────────────────────────── Health ────────────────────────────
+
+  /health:
+    servers:
+      - url: https://analysis-bi.acdgbrasil.com.br
+    get:
+      operationId: liveness
+      summary: Liveness check
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Service is alive.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardReadinessDataResponse'
+
+  /ready:
+    servers:
+      - url: https://analysis-bi.acdgbrasil.com.br
+    get:
+      operationId: readiness
+      summary: Readiness check
+      description: Verifies NATS and PostgreSQL connectivity.
+      tags:
+        - Health
+      security: []
+      responses:
+        '200':
+          description: Service is ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardReadinessDataResponse'
+        '503':
+          description: Service is unavailable (one or more dependencies unreachable).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardReadinessDataResponse'
+
+  # ──────────────────────────── Indicators ────────────────────────────
+
+  /indicators/{axis}:
+    get:
+      operationId: getIndicators
+      summary: Get indicators by axis
+      description: |
+        Returns aggregated, anonymized indicator rows for the specified axis.
+        Each row contains dimension labels, a count value, and a period label.
+        Data is anonymized with k-anonymity (k=5) — groups below threshold
+        are suppressed and reported in meta.suppressed_groups.
+
+        Available axes: demographics, epidemiological, socioeconomic, protection, care.
+
+        Required role: analyst or admin.
+      tags:
+        - Indicators
+      parameters:
+        - name: axis
+          in: path
+          required: true
+          description: Indicator axis to query.
+          schema:
+            $ref: '#/components/schemas/IndicatorAxis'
+        - $ref: '#/components/parameters/PeriodStart'
+        - $ref: '#/components/parameters/PeriodEnd'
+        - $ref: '#/components/parameters/Mesoregion'
+        - $ref: '#/components/parameters/Granularity'
+        - name: top
+          in: query
+          required: false
+          description: Limit to top N rows (useful for epidemiological top diagnoses).
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Indicator rows retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardIndicatorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Export ────────────────────────────
+
+  /export/{format}:
+    get:
+      operationId: exportData
+      summary: Export anonymized dataset
+      description: |
+        Generates and downloads an anonymized dataset in the requested format.
+        The response is a binary file with appropriate Content-Type and
+        Content-Disposition headers.
+
+        Supported formats: csv, json, xml, parquet, dbf, dbc, ods, fhir.
+
+        Required role: exporter or admin.
+      tags:
+        - Export
+      parameters:
+        - name: format
+          in: path
+          required: true
+          description: Desired export file format.
+          schema:
+            $ref: '#/components/schemas/ExportFormat'
+        - $ref: '#/components/parameters/PeriodStart'
+        - $ref: '#/components/parameters/PeriodEnd'
+        - $ref: '#/components/parameters/Mesoregion'
+        - name: dataset
+          in: query
+          required: false
+          description: Dataset axis to export (default demographics).
+          schema:
+            type: string
+            default: demographics
+            enum:
+              - demographics
+              - epidemiological
+              - socioeconomic
+              - protection
+              - care
+      responses:
+        '200':
+          description: File generated successfully.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: "Attachment filename (e.g., attachment; filename=\"acdg-demographics-2026-01_2026-03.csv\")."
+            Content-Type:
+              schema:
+                type: string
+              description: MIME type matching the requested format.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Metadata ────────────────────────────
+
+  /metadata/datasets:
+    get:
+      operationId: listDatasets
+      summary: List available datasets
+      description: Returns all available datasets with descriptions. Requires authentication.
+      tags:
+        - Metadata
+      responses:
+        '200':
+          description: Datasets listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardDatasetListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /metadata/formats:
+    get:
+      operationId: listExportFormats
+      summary: List export formats
+      description: Returns all supported export file formats with MIME types. Requires authentication.
+      tags:
+        - Metadata
+      responses:
+        '200':
+          description: Formats listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardFormatListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /metadata/regions:
+    get:
+      operationId: listRegions
+      summary: List available regions
+      description: Returns IBGE mesoregions available in the system. Requires authentication.
+      tags:
+        - Metadata
+      responses:
+        '200':
+          description: Regions listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardRegionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT from Zitadel OIDC. Roles extracted from token claims.
+        Indicator endpoints require "analyst" or "admin" role.
+        Export endpoints require "exporter" or "admin" role.
+        Metadata endpoints require any authenticated user.
+
+  parameters:
+    PeriodStart:
+      name: period_start
+      in: query
+      required: true
+      description: Start period for temporal filtering (inclusive, YYYY-MM format).
+      schema:
+        type: string
+        pattern: ^\d{4}-\d{2}$
+        example: "2025-01"
+    PeriodEnd:
+      name: period_end
+      in: query
+      required: true
+      description: End period for temporal filtering (inclusive, YYYY-MM format).
+      schema:
+        type: string
+        pattern: ^\d{4}-\d{2}$
+        example: "2025-12"
+    Mesoregion:
+      name: mesoregion
+      in: query
+      required: false
+      description: IBGE mesoregion name for geographic filtering.
+      schema:
+        type: string
+    Granularity:
+      name: granularity
+      in: query
+      required: false
+      description: Time series resolution (default monthly).
+      schema:
+        $ref: '#/components/schemas/TimeGranularity'
+
+  schemas:
+    # Primitives
+    IsoDateTime:
+      $ref: ../model/schemas/IsoDateTime.yaml
+
+    # Enums
+    TimeGranularity:
+      $ref: ../model/schemas/TimeGranularity.yaml
+    ExportFormat:
+      $ref: ../model/schemas/ExportFormat.yaml
+    IndicatorAxis:
+      $ref: ../model/schemas/IndicatorAxis.yaml
+
+    # Data types
+    IndicatorRow:
+      $ref: ../model/schemas/IndicatorRow.yaml
+
+    # Metadata types
+    DatasetMetadata:
+      $ref: ../model/schemas/DatasetMetadata.yaml
+    ExportFormatMetadata:
+      $ref: ../model/schemas/ExportFormatMetadata.yaml
+    RegionMetadata:
+      $ref: ../model/schemas/RegionMetadata.yaml
+
+    # Infrastructure
+    ReadinessResponse:
+      $ref: ../model/schemas/ReadinessResponse.yaml
+    ErrorResponse:
+      $ref: ../model/schemas/ErrorResponse.yaml
+
+    # Response meta with k-anonymity fields
+    IndicatorMeta:
+      type: object
+      additionalProperties: false
+      required:
+        - timestamp
+        - k_threshold
+        - suppressed_groups
+        - total_records
+      properties:
+        timestamp:
+          $ref: '#/components/schemas/IsoDateTime'
+        period:
+          type: string
+          description: Queried period range (e.g., "2025-01/2025-12").
+        k_threshold:
+          type: integer
+          description: K-anonymity threshold (always 5).
+          const: 5
+        suppressed_groups:
+          type: integer
+          minimum: 0
+          description: Number of groups suppressed due to cell count below k_threshold.
+        total_records:
+          type: integer
+          minimum: 0
+          description: Total rows in the response data array.
+
+    # Composed response wrappers
+    StandardIndicatorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IndicatorRow'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+    StandardReadinessDataResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          $ref: '#/components/schemas/ReadinessResponse'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+    StandardDatasetListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatasetMetadata'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+    StandardFormatListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportFormatMetadata'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+    StandardRegionListResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegionMetadata'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+  responses:
+    BadRequest:
+      description: Invalid input data.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Missing or invalid JWT token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Insufficient role permissions.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Target resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Unexpected server-side failure.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

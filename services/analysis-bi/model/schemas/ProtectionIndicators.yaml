@@ -1,0 +1,68 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ProtectionIndicators
+description: Aggregated protection indicators covering referrals, violations, and institutional placement.
+type: object
+additionalProperties: false
+required:
+  - totalReferrals
+  - totalViolationReports
+  - totalPlacements
+  - referralsByDestination
+  - violationsByType
+properties:
+  totalReferrals:
+    type: integer
+    minimum: 0
+    description: Total referrals created in the filtered scope.
+  totalViolationReports:
+    type: integer
+    minimum: 0
+    description: Total rights violation reports in the filtered scope.
+  totalPlacements:
+    type: integer
+    minimum: 0
+    description: Total institutional placement records in the filtered scope.
+  referralsByDestination:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - destination
+        - count
+      properties:
+        destination:
+          type: string
+          description: Referral destination service name.
+        count:
+          type: integer
+          minimum: 0
+    description: Distribution of referrals by destination service.
+  violationsByType:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - violationType
+        - count
+      properties:
+        violationType:
+          type: string
+          description: Type of rights violation.
+        count:
+          type: integer
+          minimum: 0
+    description: Distribution of violation reports by type.
+  referralsTimeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: Referrals created over time.
+  violationsTimeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: Violation reports over time.
+  kAnonymity:
+    $ref: ./KAnonymityNotice.yaml

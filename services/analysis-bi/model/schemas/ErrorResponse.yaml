@@ -1,0 +1,19 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ErrorResponse
+description: Error response body returned by the analysis-bi service.
+type: object
+additionalProperties: false
+required:
+  - error
+  - status
+  - message
+properties:
+  error:
+    type: string
+    description: HTTP status text (e.g., "Bad Request").
+  status:
+    type: integer
+    description: HTTP status code (e.g., 400).
+  message:
+    type: string
+    description: Detailed error message.

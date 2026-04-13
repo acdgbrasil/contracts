@@ -1,7 +1,7 @@
 asyncapi: 3.1.0
 info:
   title: Social Care Async Contract
-  version: 2.1.0
+  version: 2.2.0
   description: |
     Asynchronous event contracts for the social-care service.
     Events are published via Transactional Outbox pattern and relayed to NATS.
@@ -22,6 +22,30 @@ channels:
     messages:
       PatientCreated:
         $ref: '#/components/messages/PatientCreated'
+
+  social-care.patient.discharged:
+    address: social-care.patient.discharged
+    messages:
+      PatientDischarged:
+        $ref: '#/components/messages/PatientDischarged'
+
+  social-care.patient.readmitted:
+    address: social-care.patient.readmitted
+    messages:
+      PatientReadmitted:
+        $ref: '#/components/messages/PatientReadmitted'
+
+  social-care.patient.admitted:
+    address: social-care.patient.admitted
+    messages:
+      PatientAdmitted:
+        $ref: '#/components/messages/PatientAdmitted'
+
+  social-care.patient.withdrawn:
+    address: social-care.patient.withdrawn
+    messages:
+      PatientWithdrawn:
+        $ref: '#/components/messages/PatientWithdrawn'
 
   # Registry — Family
   social-care.family-member.added:
@@ -133,6 +157,34 @@ operations:
       $ref: '#/channels/social-care.patient.created'
     messages:
       - $ref: '#/channels/social-care.patient.created/messages/PatientCreated'
+
+  publishPatientDischarged:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.patient.discharged'
+    messages:
+      - $ref: '#/channels/social-care.patient.discharged/messages/PatientDischarged'
+
+  publishPatientReadmitted:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.patient.readmitted'
+    messages:
+      - $ref: '#/channels/social-care.patient.readmitted/messages/PatientReadmitted'
+
+  publishPatientAdmitted:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.patient.admitted'
+    messages:
+      - $ref: '#/channels/social-care.patient.admitted/messages/PatientAdmitted'
+
+  publishPatientWithdrawn:
+    action: send
+    channel:
+      $ref: '#/channels/social-care.patient.withdrawn'
+    messages:
+      - $ref: '#/channels/social-care.patient.withdrawn/messages/PatientWithdrawn'
 
   publishFamilyMemberAdded:
     action: send
@@ -260,6 +312,34 @@ components:
       summary: Emitted when a new patient record is created.
       payload:
         $ref: ../model/schemas/PatientCreatedEventPayload.yaml
+
+    PatientDischarged:
+      name: PatientDischarged
+      title: Patient Discharged
+      summary: Emitted when a patient is discharged from active care.
+      payload:
+        $ref: ../model/schemas/PatientDischargedEventPayload.yaml
+
+    PatientReadmitted:
+      name: PatientReadmitted
+      title: Patient Readmitted
+      summary: Emitted when a previously discharged patient is readmitted.
+      payload:
+        $ref: ../model/schemas/PatientReadmittedEventPayload.yaml
+
+    PatientAdmitted:
+      name: PatientAdmitted
+      title: Patient Admitted from Waitlist
+      summary: Emitted when a patient on the waitlist is admitted to active care.
+      payload:
+        $ref: ../model/schemas/PatientAdmittedEventPayload.yaml
+
+    PatientWithdrawn:
+      name: PatientWithdrawn
+      title: Patient Withdrawn from Waitlist
+      summary: Emitted when a patient is withdrawn from the waitlist.
+      payload:
+        $ref: ../model/schemas/PatientWithdrawnEventPayload.yaml
 
     # Registry — Family
     FamilyMemberAdded:

@@ -1,0 +1,31 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientDischargedEventPayload
+description: Payload emitted when a patient is discharged from active care.
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the discharge.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - personId
+      - reason
+    properties:
+      patientId:
+        $ref: ./Uuid.yaml
+      personId:
+        $ref: ./Uuid.yaml
+      reason:
+        type: string
+      notes:
+        type: string

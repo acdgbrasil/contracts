@@ -1,0 +1,16 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: GenderDistribution
+description: Count of individuals by gender category.
+type: object
+additionalProperties: false
+required:
+  - gender
+  - count
+properties:
+  gender:
+    type: string
+    description: Gender category label.
+  count:
+    type: integer
+    minimum: 0
+    description: Number of individuals in this category.

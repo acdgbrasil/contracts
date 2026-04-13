@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: ReadmitPatientRequest
+description: Request to readmit a previously discharged patient.
+type: object
+additionalProperties: false
+properties:
+  notes:
+    type: string
+    description: Optional notes about the readmission.

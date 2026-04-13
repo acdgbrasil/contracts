@@ -1,0 +1,28 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientReadmittedEventPayload
+description: Payload emitted when a previously discharged patient is readmitted.
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the readmission.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - personId
+    properties:
+      patientId:
+        $ref: ./Uuid.yaml
+      personId:
+        $ref: ./Uuid.yaml
+      notes:
+        type: string

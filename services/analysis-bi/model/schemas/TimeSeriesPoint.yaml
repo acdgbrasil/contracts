@@ -1,0 +1,17 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: TimeSeriesPoint
+description: A single data point in a time series.
+type: object
+additionalProperties: false
+required:
+  - period
+  - value
+properties:
+  period:
+    type: string
+    description: |
+      Period label whose format depends on granularity.
+      Monthly: "2026-04", Quarterly: "2026-Q1", Yearly: "2026".
+  value:
+    type: number
+    description: Aggregated numeric value for the period.

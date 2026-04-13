@@ -1,0 +1,10 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: IndicatorAxis
+description: Available indicator axes for aggregated queries.
+type: string
+enum:
+  - demographics
+  - epidemiological
+  - socioeconomic
+  - protection
+  - care

@@ -1,0 +1,26 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientAdmittedEventPayload
+description: Payload emitted when a patient on the waitlist is admitted to active care.
+type: object
+additionalProperties: false
+required:
+  - metadata
+  - actorId
+  - data
+properties:
+  metadata:
+    $ref: ./EventMetadata.yaml
+  actorId:
+    type: string
+    description: Identifier of the actor who admitted the patient.
+  data:
+    type: object
+    additionalProperties: false
+    required:
+      - patientId
+      - personId
+    properties:
+      patientId:
+        $ref: ./Uuid.yaml
+      personId:
+        $ref: ./Uuid.yaml

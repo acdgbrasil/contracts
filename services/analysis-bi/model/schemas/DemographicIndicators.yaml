@@ -1,0 +1,38 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: DemographicIndicators
+description: Aggregated demographic indicators with age pyramid, gender, and regional distribution.
+type: object
+additionalProperties: false
+required:
+  - totalPatients
+  - agePyramid
+  - genderDistribution
+  - regionalDistribution
+  - timeSeries
+properties:
+  totalPatients:
+    type: integer
+    minimum: 0
+    description: Total number of patients in the filtered scope.
+  agePyramid:
+    type: array
+    items:
+      $ref: ./AgeDistribution.yaml
+    description: Age distribution forming the population pyramid.
+  genderDistribution:
+    type: array
+    items:
+      $ref: ./GenderDistribution.yaml
+    description: Distribution of patients by gender.
+  regionalDistribution:
+    type: array
+    items:
+      $ref: ./RegionalDistribution.yaml
+    description: Distribution of patients by IBGE mesoregion.
+  timeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: New patient registrations over time.
+  kAnonymity:
+    $ref: ./KAnonymityNotice.yaml

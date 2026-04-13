@@ -1,0 +1,39 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegionMetadata
+description: IBGE region metadata with mesoregion and optional microregion detail.
+type: object
+additionalProperties: false
+required:
+  - mesoregionCode
+  - mesoregionName
+  - stateCode
+  - stateName
+properties:
+  mesoregionCode:
+    type: string
+    description: IBGE mesoregion numeric code.
+  mesoregionName:
+    type: string
+    description: Mesoregion name.
+  stateCode:
+    type: string
+    description: Two-letter state abbreviation (UF).
+  stateName:
+    type: string
+    description: Full state name.
+  microregions:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - microregionCode
+        - microregionName
+      properties:
+        microregionCode:
+          type: string
+          description: IBGE microregion numeric code.
+        microregionName:
+          type: string
+          description: Microregion name.
+    description: Microregions within this mesoregion, when available.

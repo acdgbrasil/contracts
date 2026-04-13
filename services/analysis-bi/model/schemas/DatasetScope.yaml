@@ -1,0 +1,11 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: DatasetScope
+type: string
+enum:
+  - full
+  - demographics
+  - epidemiological
+  - socioeconomic
+  - protection
+  - care
+description: Scope of the dataset to export or query.

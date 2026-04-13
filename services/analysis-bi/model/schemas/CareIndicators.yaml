@@ -1,0 +1,85 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: CareIndicators
+description: Aggregated care indicators covering appointments, assessment coverage, and data completeness.
+type: object
+additionalProperties: false
+required:
+  - totalAppointments
+  - assessmentCoverage
+  - completeness
+properties:
+  totalAppointments:
+    type: integer
+    minimum: 0
+    description: Total social care appointments in the filtered scope.
+  appointmentsTimeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: Appointments registered per period.
+  assessmentCoverage:
+    type: object
+    additionalProperties: false
+    required:
+      - housingCondition
+      - socioeconomicSituation
+      - workAndIncome
+      - educationalStatus
+      - healthStatus
+      - communitySupportNetwork
+      - socialHealthSummary
+    properties:
+      housingCondition:
+        type: number
+        minimum: 0
+        maximum: 100
+        description: Percentage of patients with housing condition assessed.
+      socioeconomicSituation:
+        type: number
+        minimum: 0
+        maximum: 100
+      workAndIncome:
+        type: number
+        minimum: 0
+        maximum: 100
+      educationalStatus:
+        type: number
+        minimum: 0
+        maximum: 100
+      healthStatus:
+        type: number
+        minimum: 0
+        maximum: 100
+      communitySupportNetwork:
+        type: number
+        minimum: 0
+        maximum: 100
+      socialHealthSummary:
+        type: number
+        minimum: 0
+        maximum: 100
+    description: Percentage of patients with each assessment module filled.
+  completeness:
+    type: object
+    additionalProperties: false
+    required:
+      - overallRate
+      - patientsWithAllAssessments
+      - totalPatients
+    properties:
+      overallRate:
+        type: number
+        minimum: 0
+        maximum: 100
+        description: Percentage of patients with all assessment modules completed.
+      patientsWithAllAssessments:
+        type: integer
+        minimum: 0
+        description: Absolute count of patients with 100% assessment completion.
+      totalPatients:
+        type: integer
+        minimum: 0
+        description: Total patients in scope.
+    description: Overall data completeness metrics.
+  kAnonymity:
+    $ref: ./KAnonymityNotice.yaml

@@ -1,0 +1,8 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: TimeGranularity
+type: string
+enum:
+  - monthly
+  - quarterly
+  - yearly
+description: Resolution of time series aggregation.

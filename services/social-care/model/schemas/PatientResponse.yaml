@@ -7,6 +7,7 @@ required:
   - patientId
   - personId
   - version
+  - status
   - familyMembers
   - diagnoses
   - appointments
@@ -21,6 +22,34 @@ properties:
   version:
     type: integer
     minimum: 0
+  status:
+    $ref: ./PatientStatus.yaml
+  dischargeInfo:
+    type: object
+    additionalProperties: false
+    description: Present when status is "discharged".
+    properties:
+      reason:
+        type: string
+      notes:
+        type: string
+      dischargedAt:
+        $ref: ./IsoDateTime.yaml
+      dischargedBy:
+        type: string
+  withdrawInfo:
+    type: object
+    additionalProperties: false
+    description: Present when status is "withdrawn".
+    properties:
+      reason:
+        type: string
+      notes:
+        type: string
+      withdrawnAt:
+        $ref: ./IsoDateTime.yaml
+      withdrawnBy:
+        type: string
   personalData:
     type: object
     additionalProperties: false

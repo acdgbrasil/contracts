@@ -1,0 +1,386 @@
+asyncapi: 3.1.0
+info:
+  title: Analysis BI Async Contract
+  version: 2.0.0
+  description: |
+    Asynchronous event contracts for the analysis-bi service (Go).
+    This service subscribes to domain events published by social-care
+    via NATS JetStream (stream: SOCIAL_CARE_EVENTS, subject: social-care.events.*).
+    Events are consumed, anonymized (k-anonymity k=5), and materialized
+    into aggregated star-schema indicators.
+
+    Consumer: pull-based, durable, at-least-once delivery with deduplication.
+    Pipeline: Consumer → Anonymizer (4 workers) → Materializer (2 workers).
+
+    Note: social-care also publishes lifecycle events (PatientDischarged,
+    PatientReadmitted, PatientAdmitted, PatientWithdrawnFromWaitlist) that
+    are not yet consumed by this service.
+defaultContentType: application/json
+servers:
+  production:
+    host: nats:4222
+    protocol: nats
+    description: NATS broker on the edge network.
+
+# ─────────────────────────────── Channels ───────────────────────────────
+# NATS subjects use the Swift event type name: social-care.events.<EventTypeName>
+
+channels:
+  # Registry — Demographics
+  social-care.events.PatientCreatedEvent:
+    address: social-care.events.PatientCreatedEvent
+    messages:
+      PatientCreated:
+        $ref: '#/components/messages/PatientCreated'
+
+  social-care.events.FamilyMemberAddedEvent:
+    address: social-care.events.FamilyMemberAddedEvent
+    messages:
+      FamilyMemberAdded:
+        $ref: '#/components/messages/FamilyMemberAdded'
+
+  social-care.events.FamilyMemberRemovedEvent:
+    address: social-care.events.FamilyMemberRemovedEvent
+    messages:
+      FamilyMemberRemoved:
+        $ref: '#/components/messages/FamilyMemberRemoved'
+
+  social-care.events.PrimaryCaregiverAssignedEvent:
+    address: social-care.events.PrimaryCaregiverAssignedEvent
+    messages:
+      PrimaryCaregiverAssigned:
+        $ref: '#/components/messages/PrimaryCaregiverAssigned'
+
+  social-care.events.SocialIdentityUpdatedEvent:
+    address: social-care.events.SocialIdentityUpdatedEvent
+    messages:
+      SocialIdentityUpdated:
+        $ref: '#/components/messages/SocialIdentityUpdated'
+
+  # Assessment
+  social-care.events.HousingConditionUpdatedEvent:
+    address: social-care.events.HousingConditionUpdatedEvent
+    messages:
+      HousingConditionUpdated:
+        $ref: '#/components/messages/HousingConditionUpdated'
+
+  social-care.events.SocioEconomicSituationUpdatedEvent:
+    address: social-care.events.SocioEconomicSituationUpdatedEvent
+    messages:
+      SocioEconomicSituationUpdated:
+        $ref: '#/components/messages/SocioEconomicSituationUpdated'
+
+  social-care.events.WorkAndIncomeUpdatedEvent:
+    address: social-care.events.WorkAndIncomeUpdatedEvent
+    messages:
+      WorkAndIncomeUpdated:
+        $ref: '#/components/messages/WorkAndIncomeUpdated'
+
+  social-care.events.EducationalStatusUpdatedEvent:
+    address: social-care.events.EducationalStatusUpdatedEvent
+    messages:
+      EducationalStatusUpdated:
+        $ref: '#/components/messages/EducationalStatusUpdated'
+
+  social-care.events.HealthStatusUpdatedEvent:
+    address: social-care.events.HealthStatusUpdatedEvent
+    messages:
+      HealthStatusUpdated:
+        $ref: '#/components/messages/HealthStatusUpdated'
+
+  social-care.events.CommunitySupportNetworkUpdatedEvent:
+    address: social-care.events.CommunitySupportNetworkUpdatedEvent
+    messages:
+      CommunitySupportNetworkUpdated:
+        $ref: '#/components/messages/CommunitySupportNetworkUpdated'
+
+  social-care.events.SocialHealthSummaryUpdatedEvent:
+    address: social-care.events.SocialHealthSummaryUpdatedEvent
+    messages:
+      SocialHealthSummaryUpdated:
+        $ref: '#/components/messages/SocialHealthSummaryUpdated'
+
+  # Care
+  social-care.events.SocialCareAppointmentRegisteredEvent:
+    address: social-care.events.SocialCareAppointmentRegisteredEvent
+    messages:
+      SocialCareAppointmentRegistered:
+        $ref: '#/components/messages/SocialCareAppointmentRegistered'
+
+  social-care.events.IntakeInfoUpdatedEvent:
+    address: social-care.events.IntakeInfoUpdatedEvent
+    messages:
+      IntakeInfoUpdated:
+        $ref: '#/components/messages/IntakeInfoUpdated'
+
+  # Protection
+  social-care.events.PlacementHistoryUpdatedEvent:
+    address: social-care.events.PlacementHistoryUpdatedEvent
+    messages:
+      PlacementHistoryUpdated:
+        $ref: '#/components/messages/PlacementHistoryUpdated'
+
+  social-care.events.RightsViolationReportedEvent:
+    address: social-care.events.RightsViolationReportedEvent
+    messages:
+      RightsViolationReported:
+        $ref: '#/components/messages/RightsViolationReported'
+
+  social-care.events.ReferralCreatedEvent:
+    address: social-care.events.ReferralCreatedEvent
+    messages:
+      ReferralCreated:
+        $ref: '#/components/messages/ReferralCreated'
+
+# ─────────────────────────────── Operations ───────────────────────────────
+
+operations:
+  # Registry
+  receivePatientCreated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.PatientCreatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.PatientCreatedEvent/messages/PatientCreated'
+
+  receiveFamilyMemberAdded:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.FamilyMemberAddedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.FamilyMemberAddedEvent/messages/FamilyMemberAdded'
+
+  receiveFamilyMemberRemoved:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.FamilyMemberRemovedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.FamilyMemberRemovedEvent/messages/FamilyMemberRemoved'
+
+  receivePrimaryCaregiverAssigned:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.PrimaryCaregiverAssignedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.PrimaryCaregiverAssignedEvent/messages/PrimaryCaregiverAssigned'
+
+  receiveSocialIdentityUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.SocialIdentityUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.SocialIdentityUpdatedEvent/messages/SocialIdentityUpdated'
+
+  # Assessment
+  receiveHousingConditionUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.HousingConditionUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.HousingConditionUpdatedEvent/messages/HousingConditionUpdated'
+
+  receiveSocioEconomicSituationUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.SocioEconomicSituationUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.SocioEconomicSituationUpdatedEvent/messages/SocioEconomicSituationUpdated'
+
+  receiveWorkAndIncomeUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.WorkAndIncomeUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.WorkAndIncomeUpdatedEvent/messages/WorkAndIncomeUpdated'
+
+  receiveEducationalStatusUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.EducationalStatusUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.EducationalStatusUpdatedEvent/messages/EducationalStatusUpdated'
+
+  receiveHealthStatusUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.HealthStatusUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.HealthStatusUpdatedEvent/messages/HealthStatusUpdated'
+
+  receiveCommunitySupportNetworkUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.CommunitySupportNetworkUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.CommunitySupportNetworkUpdatedEvent/messages/CommunitySupportNetworkUpdated'
+
+  receiveSocialHealthSummaryUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.SocialHealthSummaryUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.SocialHealthSummaryUpdatedEvent/messages/SocialHealthSummaryUpdated'
+
+  # Care
+  receiveSocialCareAppointmentRegistered:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.SocialCareAppointmentRegisteredEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.SocialCareAppointmentRegisteredEvent/messages/SocialCareAppointmentRegistered'
+
+  receiveIntakeInfoUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.IntakeInfoUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.IntakeInfoUpdatedEvent/messages/IntakeInfoUpdated'
+
+  # Protection
+  receivePlacementHistoryUpdated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.PlacementHistoryUpdatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.PlacementHistoryUpdatedEvent/messages/PlacementHistoryUpdated'
+
+  receiveRightsViolationReported:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.RightsViolationReportedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.RightsViolationReportedEvent/messages/RightsViolationReported'
+
+  receiveReferralCreated:
+    action: receive
+    channel:
+      $ref: '#/channels/social-care.events.ReferralCreatedEvent'
+    messages:
+      - $ref: '#/channels/social-care.events.ReferralCreatedEvent/messages/ReferralCreated'
+
+# ─────────────────────────────── Components ───────────────────────────────
+
+components:
+  messages:
+    # Registry — Demographics
+    PatientCreated:
+      name: PatientCreated
+      title: Patient Created
+      summary: Consumed when a new patient record is created in social-care.
+      payload:
+        $ref: ../../social-care/model/schemas/PatientCreatedEventPayload.yaml
+
+    FamilyMemberAdded:
+      name: FamilyMemberAdded
+      title: Family Member Added
+      summary: Consumed when a family member is associated with a patient.
+      payload:
+        $ref: ../../social-care/model/schemas/FamilyMemberAddedEventPayload.yaml
+
+    FamilyMemberRemoved:
+      name: FamilyMemberRemoved
+      title: Family Member Removed
+      summary: Consumed when a family member is removed from a patient.
+      payload:
+        $ref: ../../social-care/model/schemas/FamilyMemberRemovedEventPayload.yaml
+
+    PrimaryCaregiverAssigned:
+      name: PrimaryCaregiverAssigned
+      title: Primary Caregiver Assigned
+      summary: Consumed when a family member is assigned as primary caregiver.
+      payload:
+        $ref: ../../social-care/model/schemas/PrimaryCaregiverAssignedEventPayload.yaml
+
+    SocialIdentityUpdated:
+      name: SocialIdentityUpdated
+      title: Social Identity Updated
+      summary: Consumed when a patient's social identity is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Assessment (all use before/after diff payload)
+    HousingConditionUpdated:
+      name: HousingConditionUpdated
+      title: Housing Condition Updated
+      summary: Consumed when a patient's housing condition assessment is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    SocioEconomicSituationUpdated:
+      name: SocioEconomicSituationUpdated
+      title: Socioeconomic Situation Updated
+      summary: Consumed when a patient's socioeconomic situation is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    WorkAndIncomeUpdated:
+      name: WorkAndIncomeUpdated
+      title: Work and Income Updated
+      summary: Consumed when a patient's work and income data is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    EducationalStatusUpdated:
+      name: EducationalStatusUpdated
+      title: Educational Status Updated
+      summary: Consumed when a patient's educational status is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    HealthStatusUpdated:
+      name: HealthStatusUpdated
+      title: Health Status Updated
+      summary: Consumed when a patient's health status is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    CommunitySupportNetworkUpdated:
+      name: CommunitySupportNetworkUpdated
+      title: Community Support Network Updated
+      summary: Consumed when a patient's community support network is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    SocialHealthSummaryUpdated:
+      name: SocialHealthSummaryUpdated
+      title: Social Health Summary Updated
+      summary: Consumed when a patient's social health summary is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Care
+    SocialCareAppointmentRegistered:
+      name: SocialCareAppointmentRegistered
+      title: Social Care Appointment Registered
+      summary: Consumed when a social care appointment is registered.
+      payload:
+        $ref: ../../social-care/model/schemas/SocialCareAppointmentRegisteredEventPayload.yaml
+
+    IntakeInfoUpdated:
+      name: IntakeInfoUpdated
+      title: Intake Info Updated
+      summary: Consumed when a patient's intake information is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    # Protection
+    PlacementHistoryUpdated:
+      name: PlacementHistoryUpdated
+      title: Placement History Updated
+      summary: Consumed when a patient's placement history is updated.
+      payload:
+        $ref: ../../social-care/model/schemas/AssessmentUpdatedEventPayload.yaml
+
+    RightsViolationReported:
+      name: RightsViolationReported
+      title: Rights Violation Reported
+      summary: Consumed when a rights violation report is registered.
+      payload:
+        $ref: ../../social-care/model/schemas/RightsViolationReportedEventPayload.yaml
+
+    ReferralCreated:
+      name: ReferralCreated
+      title: Referral Created
+      summary: Consumed when a referral is created for a patient.
+      payload:
+        $ref: ../../social-care/model/schemas/ReferralCreatedEventPayload.yaml

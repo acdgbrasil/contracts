@@ -1,0 +1,20 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: RegionalDistribution
+description: Count of records aggregated by IBGE mesoregion.
+type: object
+additionalProperties: false
+required:
+  - mesoregionCode
+  - mesoregionName
+  - count
+properties:
+  mesoregionCode:
+    type: string
+    description: IBGE mesoregion numeric code.
+  mesoregionName:
+    type: string
+    description: Human-readable mesoregion name.
+  count:
+    type: integer
+    minimum: 0
+    description: Number of records in this mesoregion.

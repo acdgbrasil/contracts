@@ -1,0 +1,87 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: SocioeconomicIndicators
+description: Aggregated socioeconomic indicators covering income, benefits, housing density, and education.
+type: object
+additionalProperties: false
+required:
+  - incomeBrackets
+  - benefitAccessRate
+  - educationLevels
+  - housingDensity
+properties:
+  incomeBrackets:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - bracket
+        - count
+      properties:
+        bracket:
+          type: string
+          description: "Income range label (e.g., '0-1 SM', '1-2 SM', '2-3 SM', '3+ SM')."
+        count:
+          type: integer
+          minimum: 0
+    description: Distribution of families by per-capita income bracket (salarios minimos).
+  benefitAccessRate:
+    type: number
+    minimum: 0
+    maximum: 100
+    description: Percentage of families accessing at least one social benefit.
+  benefitDistribution:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - benefitType
+        - count
+      properties:
+        benefitType:
+          type: string
+          description: Name of the social benefit program.
+        count:
+          type: integer
+          minimum: 0
+    description: Distribution of families by social benefit type.
+  educationLevels:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - level
+        - count
+      properties:
+        level:
+          type: string
+          description: Education level label.
+        count:
+          type: integer
+          minimum: 0
+    description: Distribution of family members by education level.
+  housingDensity:
+    type: object
+    additionalProperties: false
+    required:
+      - averagePersonsPerRoom
+      - medianPersonsPerRoom
+    properties:
+      averagePersonsPerRoom:
+        type: number
+        minimum: 0
+        description: Average number of persons per room across all households.
+      medianPersonsPerRoom:
+        type: number
+        minimum: 0
+        description: Median number of persons per room across all households.
+    description: Housing density statistics.
+  timeSeries:
+    type: array
+    items:
+      $ref: ./TimeSeriesPoint.yaml
+    description: Benefit access rate over time.
+  kAnonymity:
+    $ref: ./KAnonymityNotice.yaml

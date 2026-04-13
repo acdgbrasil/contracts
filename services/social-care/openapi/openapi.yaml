@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Social Care Sync Contract
-  version: 3.2.0
+  version: 3.3.0
   description: |
     Synchronous APIs for the social-care service.
     All mutation endpoints require the X-Actor-Id header.
@@ -16,6 +16,8 @@ tags:
     description: Infrastructure health probes.
   - name: Registry
     description: Patient registration, family members, and social identity.
+  - name: Lifecycle
+    description: Patient lifecycle transitions (discharge, readmit, admit from waitlist, withdraw).
   - name: Assessment
     description: Patient assessment modules (housing, socioeconomic, education, health, community, summary).
   - name: Care
@@ -93,6 +95,12 @@ paths:
           description: Filter by firstName, lastName, or CPF (case-insensitive, partial match).
           schema:
             type: string
+        - name: status
+          in: query
+          required: false
+          description: Filter by patient lifecycle status.
+          schema:
+            $ref: '#/components/schemas/PatientStatus'
         - name: cursor
           in: query
           required: false
@@ -302,6 +310,120 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # ──────────────────────────── Lifecycle ────────────────────────────
+
+  /patients/{patientId}/discharge:
+    post:
+      operationId: dischargePatient
+      summary: Discharge patient
+      description: Discharges an admitted patient from active care. Records reason and optional notes.
+      tags:
+        - Lifecycle
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DischargePatientRequest'
+      responses:
+        '204':
+          description: Patient discharged.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/readmit:
+    post:
+      operationId: readmitPatient
+      summary: Readmit patient
+      description: Readmits a previously discharged patient back to active care.
+      tags:
+        - Lifecycle
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadmitPatientRequest'
+      responses:
+        '204':
+          description: Patient readmitted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/admit:
+    post:
+      operationId: admitPatientFromWaitlist
+      summary: Admit patient from waitlist
+      description: Admits a patient from the waitlist to active care.
+      tags:
+        - Lifecycle
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Patient admitted from waitlist.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /patients/{patientId}/withdraw:
+    post:
+      operationId: withdrawPatientFromWaitlist
+      summary: Withdraw patient from waitlist
+      description: Withdraws a patient from the waitlist. Records reason and optional notes.
+      tags:
+        - Lifecycle
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawPatientRequest'
+      responses:
+        '204':
+          description: Patient withdrawn from waitlist.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # ──────────────────────────── Audit ────────────────────────────
 
   /patients/{patientId}/audit-trail:
@@ -319,6 +441,23 @@ paths:
           description: Filter by event type.
           schema:
             type: string
+        - name: limit
+          in: query
+          required: false
+          description: Number of entries per page (1-200, default 50).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          description: Number of entries to skip (default 0).
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
           description: Audit trail entries.
@@ -1003,6 +1142,10 @@ components:
     IsoDate:
       $ref: ../model/schemas/IsoDate.yaml
 
+    # Enums
+    PatientStatus:
+      $ref: ../model/schemas/PatientStatus.yaml
+
     # Response envelopes
     ReadinessResponse:
       $ref: ../model/schemas/ReadinessResponse.yaml
@@ -1196,6 +1339,12 @@ components:
       $ref: ../model/schemas/CreateLookupRequestRequest.yaml
     RejectLookupRequestRequest:
       $ref: ../model/schemas/RejectLookupRequestRequest.yaml
+    DischargePatientRequest:
+      $ref: ../model/schemas/DischargePatientRequest.yaml
+    ReadmitPatientRequest:
+      $ref: ../model/schemas/ReadmitPatientRequest.yaml
+    WithdrawPatientRequest:
+      $ref: ../model/schemas/WithdrawPatientRequest.yaml
 
   responses:
     BadRequest:

@@ -1,0 +1,16 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: AgeDistribution
+description: Count of individuals within a defined age bracket.
+type: object
+additionalProperties: false
+required:
+  - bracket
+  - count
+properties:
+  bracket:
+    type: string
+    description: "Age range label (e.g., '0-4', '5-9', '10-14', '80+')."
+  count:
+    type: integer
+    minimum: 0
+    description: Number of individuals in this bracket.

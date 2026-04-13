@@ -1,0 +1,9 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: PatientStatus
+description: Current lifecycle status of a patient record.
+type: string
+enum:
+  - admitted
+  - discharged
+  - waitlist
+  - withdrawn
