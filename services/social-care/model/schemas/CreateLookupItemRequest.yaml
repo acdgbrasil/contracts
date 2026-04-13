@@ -17,14 +17,17 @@ properties:
     minLength: 1
     description: Human-readable description of the item.
   exigeRegistroNascimento:
-    type: boolean
-    nullable: true
+    type:
+      - boolean
+      - "null"
     description: "Only for dominio_tipo_beneficio: requires birth certificate number."
   exigeCpfFalecido:
-    type: boolean
-    nullable: true
+    type:
+      - boolean
+      - "null"
     description: "Only for dominio_tipo_beneficio: requires deceased CPF."
   exigeDescricao:
-    type: boolean
-    nullable: true
+    type:
+      - boolean
+      - "null"
     description: "Only for dominio_tipo_violacao: requires detailed description."

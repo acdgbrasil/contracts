@@ -42,14 +42,17 @@ properties:
     $ref: ./IsoDateTime.yaml
     description: Timestamp of when the request was created.
   reviewedBy:
-    type: string
-    nullable: true
+    type:
+      - string
+      - "null"
     description: User ID of the admin who reviewed. Null if still pending.
   reviewedAt:
-    $ref: ./IsoDateTime.yaml
-    nullable: true
+    oneOf:
+      - $ref: ./IsoDateTime.yaml
+      - type: "null"
     description: Timestamp of the review. Null if still pending.
   reviewNote:
-    type: string
-    nullable: true
+    type:
+      - string
+      - "null"
     description: Admin review note (required on rejection). Null if approved or pending.
