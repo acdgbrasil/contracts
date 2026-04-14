@@ -1,11 +1,12 @@
 asyncapi: 3.1.0
 info:
   title: People Context Async Contract
-  version: 1.0.0
+  version: 2.0.0
   description: |
     Asynchronous event contracts for the people-context service.
     Events are published via Transactional Outbox pattern and relayed to NATS.
     All events carry metadata (eventId, occurredAt, schemaVersion) and an actorId.
+    Includes Zitadel user lifecycle events (provisioned, deactivated, reactivated, password reset).
 defaultContentType: application/json
 servers:
   production:
@@ -46,6 +47,30 @@ channels:
       RoleReactivated:
         $ref: '#/components/messages/RoleReactivated'
 
+  people.user.provisioned:
+    address: people.user.provisioned
+    messages:
+      UserProvisioned:
+        $ref: '#/components/messages/UserProvisioned'
+
+  people.user.deactivated:
+    address: people.user.deactivated
+    messages:
+      UserDeactivated:
+        $ref: '#/components/messages/UserDeactivated'
+
+  people.user.reactivated:
+    address: people.user.reactivated
+    messages:
+      UserReactivated:
+        $ref: '#/components/messages/UserReactivated'
+
+  people.user.password_reset_requested:
+    address: people.user.password_reset_requested
+    messages:
+      PasswordResetRequested:
+        $ref: '#/components/messages/PasswordResetRequested'
+
 # ─────────────────────────────── Operations ───────────────────────────────
 
 operations:
@@ -83,6 +108,34 @@ operations:
       $ref: '#/channels/people.role.reactivated'
     messages:
       - $ref: '#/channels/people.role.reactivated/messages/RoleReactivated'
+
+  publishUserProvisioned:
+    action: send
+    channel:
+      $ref: '#/channels/people.user.provisioned'
+    messages:
+      - $ref: '#/channels/people.user.provisioned/messages/UserProvisioned'
+
+  publishUserDeactivated:
+    action: send
+    channel:
+      $ref: '#/channels/people.user.deactivated'
+    messages:
+      - $ref: '#/channels/people.user.deactivated/messages/UserDeactivated'
+
+  publishUserReactivated:
+    action: send
+    channel:
+      $ref: '#/channels/people.user.reactivated'
+    messages:
+      - $ref: '#/channels/people.user.reactivated/messages/UserReactivated'
+
+  publishPasswordResetRequested:
+    action: send
+    channel:
+      $ref: '#/channels/people.user.password_reset_requested'
+    messages:
+      - $ref: '#/channels/people.user.password_reset_requested/messages/PasswordResetRequested'
 
 # ─────────────────────────────── Components ───────────────────────────────
 
@@ -122,3 +175,31 @@ components:
       summary: Emitted when a previously deactivated system role is reactivated.
       payload:
         $ref: ../model/schemas/RoleReactivatedEventPayload.yaml
+
+    UserProvisioned:
+      name: UserProvisioned
+      title: User Provisioned
+      summary: Emitted when a Zitadel user is provisioned for a person.
+      payload:
+        $ref: ../model/schemas/UserProvisionedEventPayload.yaml
+
+    UserDeactivated:
+      name: UserDeactivated
+      title: User Deactivated
+      summary: Emitted when a person's Zitadel user is deactivated.
+      payload:
+        $ref: ../model/schemas/UserDeactivatedEventPayload.yaml
+
+    UserReactivated:
+      name: UserReactivated
+      title: User Reactivated
+      summary: Emitted when a person's Zitadel user is reactivated.
+      payload:
+        $ref: ../model/schemas/UserReactivatedEventPayload.yaml
+
+    PasswordResetRequested:
+      name: PasswordResetRequested
+      title: Password Reset Requested
+      summary: Emitted when a password reset is requested for a person's Zitadel user.
+      payload:
+        $ref: ../model/schemas/PasswordResetRequestedEventPayload.yaml

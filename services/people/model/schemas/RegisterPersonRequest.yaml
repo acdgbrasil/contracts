@@ -19,3 +19,15 @@ properties:
     description: Brazilian CPF. Used as dedup key when provided.
   birthDate:
     $ref: ./IsoDate.yaml
+  email:
+    type: string
+    format: email
+    description: Email address. Required when createLogin is true.
+  createLogin:
+    type: boolean
+    description: When true, provisions a Zitadel user for this person. Requires email.
+    default: false
+  initialPassword:
+    type: string
+    minLength: 8
+    description: Optional initial password for the Zitadel user. Change required on first login.

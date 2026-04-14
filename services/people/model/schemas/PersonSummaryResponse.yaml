@@ -7,6 +7,7 @@ required:
   - id
   - fullName
   - birthDate
+  - active
 properties:
   id:
     $ref: ./Uuid.yaml
@@ -17,3 +18,5 @@ properties:
     pattern: ^\d{11}$
   birthDate:
     $ref: ./IsoDate.yaml
+  active:
+    type: boolean

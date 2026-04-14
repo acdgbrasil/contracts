@@ -1,10 +1,11 @@
 openapi: 3.1.0
 info:
   title: People Context Sync Contract
-  version: 1.1.0
+  version: 2.0.0
   description: |
     Synchronous APIs for the people-context service.
     Central identity registry for the ACDG ecosystem.
+    Integrates with Zitadel for user provisioning and lifecycle management.
     All mutation endpoints require the X-Actor-Id header.
   license:
     name: Proprietary
@@ -19,6 +20,8 @@ tags:
     description: Person identity registration, lookup, and update.
   - name: Roles
     description: System role assignment and query.
+  - name: Identity
+    description: Zitadel user provisioning and lifecycle (deactivate, reactivate, password reset).
 security:
   - bearerAuth: []
 
@@ -85,6 +88,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StandardIdResponse'
+        '207':
+          description: Person created but Zitadel user provisioning failed (partial success).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialSuccessResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -196,6 +205,83 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ──────────────────────────── Identity ────────────────────────────
+
+  /people/{personId}/deactivate:
+    put:
+      operationId: deactivatePerson
+      summary: Deactivate person
+      description: |
+        Deactivates a person and their Zitadel user (if provisioned).
+        If Zitadel deactivation fails, the local deactivation is rolled back.
+      tags: [Identity]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Person deactivated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/{personId}/reactivate:
+    put:
+      operationId: reactivatePerson
+      summary: Reactivate person
+      description: |
+        Reactivates a previously deactivated person and their Zitadel user (if provisioned).
+        If Zitadel reactivation fails, the local reactivation is rolled back.
+      tags: [Identity]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Person reactivated.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /people/{personId}/request-password-reset:
+    post:
+      operationId: requestPasswordReset
+      summary: Request password reset
+      description: |
+        Requests a password reset for a person's Zitadel user.
+        The person must have a provisioned Zitadel login.
+      tags: [Identity]
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+        - $ref: '#/components/parameters/ActorId'
+      responses:
+        '204':
+          description: Password reset requested.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '502':
+          $ref: '#/components/responses/BadGateway'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -397,6 +483,10 @@ components:
     AssignRoleRequest:
       $ref: ../model/schemas/AssignRoleRequest.yaml
 
+    # Warnings
+    WarningResponse:
+      $ref: ../model/schemas/WarningResponse.yaml
+
     # Composed response wrappers
     StandardIdResponse:
       type: object
@@ -473,6 +563,25 @@ components:
             timestamp:
               $ref: '#/components/schemas/IsoDateTime'
 
+    PartialSuccessResponse:
+      type: object
+      additionalProperties: false
+      required: [data, warnings, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/IdResponse'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarningResponse'
+        meta:
+          type: object
+          additionalProperties: false
+          required: [timestamp]
+          properties:
+            timestamp:
+              $ref: '#/components/schemas/IsoDateTime'
+
     StandardRoleQueryResponse:
       type: object
       additionalProperties: false
@@ -518,6 +627,12 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
     UnprocessableEntity:
       description: Business validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    BadGateway:
+      description: Upstream service (Zitadel) failed.
       content:
         application/json:
           schema:
