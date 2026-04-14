@@ -1,10 +1,18 @@
 openapi: 3.1.0
 info:
   title: Social Care Sync Contract
-  version: 3.3.0
+  version: 3.4.0
   description: |
     Synchronous APIs for the social-care service.
     All mutation endpoints require the X-Actor-Id header.
+
+    ## RBAC Model (v3.4.0 — BREAKING CHANGE in role names)
+    JWT roles now use composite keys: `{system}:{role}` (e.g. `social-care:worker`).
+    - **superadmin** — bypasses all role checks.
+    - **social-care:admin** — full access including lookup administration.
+    - **social-care:worker** — CRUD on patients, assessments, care, protection (was `social_worker`).
+    - **social-care:owner** — read-only on own data.
+    Role guards must use suffix matching: `social-care:worker` satisfies a guard requiring `worker`.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -1102,6 +1110,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        JWT from Zitadel. Role claims use composite keys (`{system}:{role}`).
+        The `superadmin` role bypasses all checks.
+        `social_worker` is renamed to `worker`. Guards must match suffix:
+        JWT role `social-care:worker` satisfies a guard requiring `worker`.
 
   parameters:
     PatientId:

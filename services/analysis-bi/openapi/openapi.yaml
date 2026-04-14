@@ -1,13 +1,21 @@
 openapi: 3.1.0
 info:
   title: Analysis BI Sync Contract
-  version: 2.0.0
+  version: 2.1.0
   description: |
     Synchronous APIs for the analysis-bi service (Go / chi).
     Provides anonymized, aggregated indicators derived from social-care
     domain events. All indicator data enforces k-anonymity (k=5) with
     cell suppression when population counts are below threshold.
     Authentication via JWT Bearer token with role-based access control.
+
+    ## RBAC Model (v2.1.0 — BREAKING CHANGE in role format)
+    JWT roles now use composite keys: `{system}:{role}` (e.g. `analysis-bi:analyst`).
+    - **superadmin** — bypasses all role checks.
+    - **analysis-bi:admin** — full access to all endpoints.
+    - **analysis-bi:analyst** — indicator queries (was `analyst`).
+    - **analysis-bi:exporter** — bulk data export (was `exporter`).
+    Role guards must use suffix matching: `analysis-bi:analyst` satisfies a guard requiring `analyst`.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -252,10 +260,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: |
-        JWT from Zitadel OIDC. Roles extracted from token claims.
-        Indicator endpoints require "analyst" or "admin" role.
-        Export endpoints require "exporter" or "admin" role.
-        Metadata endpoints require any authenticated user.
+        JWT from Zitadel OIDC. Role claims now use composite keys (`{system}:{role}`).
+        The `superadmin` role bypasses all checks.
+        Indicator endpoints require `analysis-bi:analyst` or `analysis-bi:admin`.
+        Export endpoints require `analysis-bi:exporter` or `analysis-bi:admin`.
+        Guards must match suffix: `analysis-bi:analyst` satisfies a guard requiring `analyst`.
 
   parameters:
     PeriodStart:

@@ -1,12 +1,21 @@
 openapi: 3.1.0
 info:
   title: People Context Sync Contract
-  version: 2.0.0
+  version: 2.1.0
   description: |
     Synchronous APIs for the people-context service.
     Central identity registry for the ACDG ecosystem.
     Integrates with Zitadel for user provisioning and lifecycle management.
     All mutation endpoints require the X-Actor-Id header.
+
+    ## RBAC Model (v2.1.0)
+    Roles use composite keys: `{system}:{role}` (e.g. `social-care:admin`).
+    - **superadmin** — bypasses all role checks, cross-system.
+    - **{system}:admin** — manage roles within their own system only.
+    - **{system}:worker** — read/write operations (was `social_worker`).
+    - **{system}:owner** — read-only on own data.
+    Role assignment is restricted: admin can only assign within their system,
+    self-assignment is blocked, and only superadmin can grant superadmin.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -426,6 +435,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: |
+        JWT from Zitadel. Role claims use composite keys (`{system}:{role}`).
+        The `superadmin` role bypasses all checks.
+        Guards match suffix: JWT role `social-care:admin` satisfies a guard requiring `admin`.
 
   parameters:
     ActorId:
