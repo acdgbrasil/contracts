@@ -1,27 +1,33 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: FamilyMemberAddedEventPayload
+description: |
+  Flat event payload published when a family member is added.
+  Swift Codable serialization produces top-level camelCase fields.
 type: object
 additionalProperties: false
 required:
-  - metadata
-  - data
+  - id
+  - occurredAt
+  - actorId
+  - patientId
+  - memberId
+  - relationship
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
-  data:
-    type: object
-    additionalProperties: false
-    required:
-      - patientId
-      - memberId
-      - relationship
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      memberId:
-        $ref: ./Uuid.yaml
-      relationship:
-        type: string
-        minLength: 1
-        maxLength: 120
-        pattern: ^.*\S.*$
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the action.
+  patientId:
+    $ref: ./Uuid.yaml
+  memberId:
+    $ref: ./Uuid.yaml
+  relationship:
+    type: string
+    minLength: 1
+    maxLength: 120
+    pattern: ^.*\S.*$

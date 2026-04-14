@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Analysis BI Sync Contract
-  version: 2.1.0
+  version: 3.0.0
   description: |
     Synchronous APIs for the analysis-bi service (Go / chi).
     Provides anonymized, aggregated indicators derived from social-care
@@ -43,6 +43,7 @@ paths:
     get:
       operationId: liveness
       summary: Liveness check
+      description: Simple liveness probe. Returns status "ok" without checking dependencies.
       tags:
         - Health
       security: []
@@ -52,7 +53,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StandardReadinessDataResponse'
+                $ref: '#/components/schemas/StandardLivenessResponse'
 
   /ready:
     servers:
@@ -238,7 +239,9 @@ paths:
     get:
       operationId: listRegions
       summary: List available regions
-      description: Returns IBGE mesoregions available in the system. Requires authentication.
+      description: |
+        Returns IBGE mesoregions available in the system. Requires authentication.
+        Note: currently returns an empty array (placeholder — will query dim_geography when populated).
       tags:
         - Metadata
       responses:
@@ -371,6 +374,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/IndicatorRow'
+        meta:
+          $ref: '#/components/schemas/IndicatorMeta'
+
+    StandardLivenessResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              const: ok
         meta:
           $ref: '#/components/schemas/IndicatorMeta'
 

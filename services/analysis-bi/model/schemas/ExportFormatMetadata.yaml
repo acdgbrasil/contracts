@@ -4,18 +4,16 @@ description: Metadata about a supported export file format.
 type: object
 additionalProperties: false
 required:
-  - format
-  - contentType
-  - description
+  - name
+  - content_type
+  - extension
 properties:
-  format:
-    $ref: ./ExportFormat.yaml
-  contentType:
+  name:
+    type: string
+    description: "Format identifier (e.g., csv, json, parquet)."
+  content_type:
     type: string
     description: "MIME type for Content-Type header (e.g., text/csv, application/json)."
-  description:
-    type: string
-    description: Human-readable description of the format and its typical use case.
   extension:
     type: string
     description: "File extension without dot (e.g., csv, json, parquet)."

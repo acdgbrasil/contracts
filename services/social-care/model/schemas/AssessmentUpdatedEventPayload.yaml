@@ -1,32 +1,38 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: AssessmentUpdatedEventPayload
 description: |
-  Generic payload for all assessment update events. Contains before/after
-  snapshots of the assessment module. Used by: HousingConditionUpdated,
+  Generic flat payload for all assessment update events. Contains optional
+  before/after snapshots of the assessment module. Used by: HousingConditionUpdated,
   SocioEconomicSituationUpdated, WorkAndIncomeUpdated, EducationalStatusUpdated,
   HealthStatusUpdated, CommunitySupportNetworkUpdated, SocialHealthSummaryUpdated,
   SocialIdentityUpdated, PlacementHistoryUpdated, IntakeInfoUpdated.
+
+  Swift Codable serialization produces top-level camelCase fields
+  with no metadata/data wrapper.
 type: object
 additionalProperties: false
 required:
-  - metadata
-  - data
+  - id
+  - occurredAt
+  - actorId
+  - patientId
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
-  data:
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the action.
+  patientId:
+    $ref: ./Uuid.yaml
+  before:
     type: object
-    additionalProperties: false
-    required:
-      - patientId
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      before:
-        type: object
-        additionalProperties: true
-        description: Snapshot of the assessment module before the update (null if first assignment).
-      after:
-        type: object
-        additionalProperties: true
-        description: Snapshot of the assessment module after the update.
+    additionalProperties: true
+    description: Snapshot of the assessment module before the update (null if first assignment).
+  after:
+    type: object
+    additionalProperties: true
+    description: Snapshot of the assessment module after the update.

@@ -1,28 +1,29 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: PatientReadmittedEventPayload
-description: Payload emitted when a previously discharged patient is readmitted.
+description: |
+  Flat event payload emitted when a previously discharged patient is readmitted.
+  Swift Codable serialization produces top-level camelCase fields.
 type: object
 additionalProperties: false
 required:
-  - metadata
+  - id
+  - occurredAt
   - actorId
-  - data
+  - patientId
+  - personId
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
   actorId:
     type: string
     description: Identifier of the actor who performed the readmission.
-  data:
-    type: object
-    additionalProperties: false
-    required:
-      - patientId
-      - personId
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      personId:
-        $ref: ./Uuid.yaml
-      notes:
-        type: string
+  patientId:
+    $ref: ./Uuid.yaml
+  personId:
+    $ref: ./Uuid.yaml
+  notes:
+    type: string

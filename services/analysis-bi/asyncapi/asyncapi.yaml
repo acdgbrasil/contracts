@@ -1,7 +1,7 @@
 asyncapi: 3.1.0
 info:
   title: Analysis BI Async Contract
-  version: 2.0.0
+  version: 3.0.0
   description: |
     Asynchronous event contracts for the analysis-bi service (Go).
     This service subscribes to domain events published by social-care
@@ -11,6 +11,10 @@ info:
 
     Consumer: pull-based, durable, at-least-once delivery with deduplication.
     Pipeline: Consumer → Anonymizer (4 workers) → Materializer (2 workers).
+
+    Event payloads are FLAT JSON objects (no metadata/data wrapper).
+    All events have top-level fields: id (UUID), occurredAt (ISO 8601), actorId,
+    plus domain-specific fields. This matches Swift's default Codable serialization.
 
     Note: social-care also publishes lifecycle events (PatientDischarged,
     PatientReadmitted, PatientAdmitted, PatientWithdrawnFromWaitlist) that

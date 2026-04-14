@@ -1,27 +1,33 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: SocialCareAppointmentRegisteredEventPayload
+description: |
+  Flat event payload published when a social care appointment is registered.
+  Swift Codable serialization produces top-level camelCase fields.
 type: object
 additionalProperties: false
 required:
-  - metadata
-  - data
+  - id
+  - occurredAt
+  - actorId
+  - patientId
+  - appointmentId
+  - professionalInChargeId
+  - type
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
-  data:
-    type: object
-    additionalProperties: false
-    required:
-      - patientId
-      - appointmentId
-      - professionalInChargeId
-      - type
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      appointmentId:
-        $ref: ./Uuid.yaml
-      professionalInChargeId:
-        $ref: ./Uuid.yaml
-      type:
-        $ref: ./SocialCareAppointmentType.yaml
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the action.
+  patientId:
+    $ref: ./Uuid.yaml
+  appointmentId:
+    $ref: ./Uuid.yaml
+  professionalInChargeId:
+    $ref: ./Uuid.yaml
+  type:
+    $ref: ./SocialCareAppointmentType.yaml

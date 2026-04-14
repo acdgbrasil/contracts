@@ -1,21 +1,27 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: FamilyMemberRemovedEventPayload
+description: |
+  Flat event payload published when a family member is removed.
+  Swift Codable serialization produces top-level camelCase fields.
 type: object
 additionalProperties: false
 required:
-  - metadata
-  - data
+  - id
+  - occurredAt
+  - actorId
+  - patientId
+  - memberId
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
-  data:
-    type: object
-    additionalProperties: false
-    required:
-      - patientId
-      - memberId
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      memberId:
-        $ref: ./Uuid.yaml
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the action.
+  patientId:
+    $ref: ./Uuid.yaml
+  memberId:
+    $ref: ./Uuid.yaml

@@ -1,6 +1,8 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: ErrorResponse
-description: Error response body returned by the analysis-bi service.
+description: |
+  Error response body. Used directly (flat) by middleware (JWT auth, role guard,
+  rate limiter, recovery) and wrapped in StandardErrorResponse by handlers.
 type: object
 additionalProperties: false
 required:

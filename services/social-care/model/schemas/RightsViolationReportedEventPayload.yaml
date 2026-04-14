@@ -1,27 +1,33 @@
 $schema: "https://json-schema.org/draft/2020-12/schema"
 title: RightsViolationReportedEventPayload
+description: |
+  Flat event payload published when a rights violation is reported.
+  Swift Codable serialization produces top-level camelCase fields.
 type: object
 additionalProperties: false
 required:
-  - metadata
-  - data
+  - id
+  - occurredAt
+  - actorId
+  - patientId
+  - reportId
+  - victimId
+  - violationType
 properties:
-  metadata:
-    $ref: ./EventMetadata.yaml
-  data:
-    type: object
-    additionalProperties: false
-    required:
-      - patientId
-      - reportId
-      - victimId
-      - violationType
-    properties:
-      patientId:
-        $ref: ./Uuid.yaml
-      reportId:
-        $ref: ./Uuid.yaml
-      victimId:
-        $ref: ./Uuid.yaml
-      violationType:
-        $ref: ./ViolationType.yaml
+  id:
+    $ref: ./Uuid.yaml
+    description: Unique event identifier (UUID).
+  occurredAt:
+    $ref: ./IsoDateTime.yaml
+    description: Timestamp when the event occurred (ISO 8601).
+  actorId:
+    type: string
+    description: Identifier of the actor who performed the action.
+  patientId:
+    $ref: ./Uuid.yaml
+  reportId:
+    $ref: ./Uuid.yaml
+  victimId:
+    $ref: ./Uuid.yaml
+  violationType:
+    $ref: ./ViolationType.yaml
